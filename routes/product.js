@@ -3,56 +3,59 @@ var router = express.Router();
 
 const CONFIG = require('../config');
 const valid = require('../utils/valid/productValidUtils');
-const { object } = require('joi');
+const {object} = require('joi');
+const {BelongsTo, Op} = require("sequelize");
+const {json} = require("express");
 
 
-/**
- * @api {post} product/filter-product get product list with conditions
- * @apiName filter product
- * @apiGroup product
- *
- * @apiBody {object} sort conditions sort
- * @apiBody {object} filter conditions filter
- * @apiBody {int} page page of site
- * @apiBody {int} pageSize maximum number of products for the site
- *
- * @apiSuccess (200) {object} data total and products list
- * @apiSuccess (200) {int} total number of products
- * @apiSuccess (200) {object} products products list of page
- *
- * @apiError (500) {string} message error message
- * @apiError (404) {string} page does not exist
- */
-router.post('/filter-product', valid.FilterProduct, async (req, res) => {
+router.post('/filter-product', async (req, res) => {
     let {sort, filters} = req.body
     let page = req.body.page ? parseInt(req.body.page) : 1;
     let pageSize = req.body.pageSize ? parseInt(req.body.pageSize) : 10;
 
     let products, total
-    try {
-        let conditionFilters = {
-            status: 'unsold'
-        }
 
+    console.log(filters);
+    try {
+        filterConditions = {}
         if (filters) {
-            for (let key in filters) {
-                conditionFilters[key] = filters[key];
+            filterConditions['productName'] = {
+                [Op.like]: `%${filters.productName}%`
             }
         }
-
         let conditions = {
-            where: conditionFilters,
+            where: filterConditions,
+            include:[
+                {
+                    association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.Category, {
+                        as: 'category', foreignKey: 'categoryId', targetKey: 'id'
+                    }),
+                },
+            ],
             offset: (page - 1) * pageSize,
-            limit: pageSize
-        };
+            limit: pageSize,
+            logging: console.log
+        }
 
         if (sort) {
             conditions.order = [Object.entries(sort)]
         }
 
-        const result = await global.SequelizeModels.Product.findAndCountAll(conditions);
+        console.log(conditions);
+        const result = await global.sequelizeModels.Product.findAndCountAll(conditions);
+
+        console.log(result);
+
         total = result.count;
         products = result.rows;
+
+        return res.status(200).json({
+            status: 200,
+            data: {
+                total: total,
+                products: products
+            }
+        })
     } catch (err) {
         console.log('error: ', err);
         return res.status(500).json({
@@ -60,14 +63,6 @@ router.post('/filter-product', valid.FilterProduct, async (req, res) => {
             message: 'Server internal error.'
         })
     }
-
-    return res.status(200).json({
-        status: 200,
-        data: {
-            total: total,
-            products: products
-        }
-    })
 })
 
 
@@ -130,7 +125,7 @@ router.post('/upload-product', valid.UploadProduct, async (req, res) => {
  * @apiError (500) {string} message error message
  * @apiError (400) {string} message error message
  */
-router.post('/update-product', valid.UpdateProduct, async function(req, res) {
+router.post('/update-product', valid.UpdateProduct, async function (req, res) {
     try {
         let product = await global.SequelizeModels.Product.findOne({
             where: {
@@ -152,7 +147,7 @@ router.post('/update-product', valid.UpdateProduct, async function(req, res) {
 
             await product.save();
         }
-        
+
         return res.status(200).json({
             status: 200,
             message: 'Product updated successfully',
@@ -179,7 +174,7 @@ router.post('/update-product', valid.UpdateProduct, async function(req, res) {
  * @apiError (404) {String} message Product not found
  * @apiError (500) {String} message Server error message
  */
-router.delete('/delete-product', async function(req, res) {
+router.delete('/delete-product', async function (req, res) {
     try {
         const productId = req.body.productId;
 
@@ -211,13 +206,47 @@ router.delete('/delete-product', async function(req, res) {
     }
 });
 
-router.post('/update-product', (req, res) => {
-    return res.status(400).json({
-        status: 400,
-        message: 'Product does not exits.'
-    })
-})
+router.get('/product-detail/:id', async (req, res) => {
+    try {
+        let Category = global.sequelizeModels.Category;
+        let Product = global.sequelizeModels.Product;
+        console.log(req.params);
+        let product = await Product.findOne({
+            where: req.params,
+            include:[
+                {
+                    association: new BelongsTo(Product, Category, {
+                        as: 'category', foreignKey: 'categoryId', targetKey: 'id'
+                    }),
+                },
+            ]
+        })
+        if (!product) {
+            console.log("Product not found!")
+            return res.status(400).json({
+                status: 400,
+                message: "Product not found!"
+            });
+        }
 
+        product = product.dataValues;
+        product.category = product.category.dataValues.categoryName;
+        product.sizes = JSON.parse(product.sizes);
+
+        console.log(product)
+
+        return res.status(200).json({
+            status: 200,
+            data: product
+        });
+    } catch(err) {
+        console.log('error: ', err);
+        return res.status(500).json({
+            status: 500,
+            message: "Error internal server"
+        })
+    }
+})
 
 
 module.exports = router

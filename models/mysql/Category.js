@@ -1,10 +1,10 @@
 const Sequelize = require('sequelize');
-// var bcrypt = require('bcrypt-nodejs');
+var bcrypt = require('bcrypt-nodejs');
 
-const tableName = 'products'
+const tableName = 'category'
 
 module.exports = function (sequelize) {
-  const Product = sequelize.define('products',
+  const Category = sequelize.define('category',
     {
       // attributes
       id: {
@@ -13,38 +13,11 @@ module.exports = function (sequelize) {
         autoIncrement: true,
         primaryKey: true
       },
-      productName: {
-        field: 'PRODUCT_NAME',
+      categoryName: {
+        field: 'name',
         type: Sequelize.STRING(100),
         defaultValue: '',
         allowNull: false,
-      },
-      price: {
-        field: 'PRICE',
-        type: Sequelize.INTEGER,
-        allowNull: true
-      },
-        categoryId: {
-          field: 'CATEGORY_ID',
-            type: Sequelize.INTEGER,
-            allowNull: true,
-        },
-        sizes: {
-            field: 'SIZES',
-            type: Sequelize.STRING(200),
-            defaultValue: '[]',
-            allowNull: false
-        },
-      path: {
-        field: 'PATH',
-        type: Sequelize.STRING(200),
-        defaultValue: '',
-        allowNull: false
-      },
-      total: {
-        field: 'TOTAL',
-        type: Sequelize.INTEGER,
-        defaultValue: 0
       },
       createdAt: {
         field: 'CREATED_AT',
@@ -52,8 +25,8 @@ module.exports = function (sequelize) {
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
-      saleAt: {
-        field: 'SALE_AT',
+      updatedAt: {
+        field: 'UPDATED_AT',
         type: 'TIMESTAMP',
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
@@ -73,11 +46,11 @@ module.exports = function (sequelize) {
     }
   );
 
-  Product.sync({force: false, alter: true}).then(() => {
+  Category.sync({force: false, alter: true}).then(() => {
     if (!global.sequelizeModels) {
       global.sequelizeModels = {}
     }
-    global.sequelizeModels.Product = Product
+    global.sequelizeModels.Category = Category
     console.log('sync User done')
   });
 }

@@ -1,10 +1,11 @@
 
 let filterProduct = (req, res, next) => {
     const schema = Joi.object({
-        sort: Joi.string().required(),
-        filters: Joi.string().required(),
+        sort: Joi.string().optional(),
+        filters: Joi.string().optional(),
         page: Joi.number().integer().min(1).optional(),
         pageSize: Joi.number().integer().min(10).max(20).optional(),
+        conditions: Joi.object().optional(),
     })
     let { error } = schema.validate(req.body)
     if (error) {

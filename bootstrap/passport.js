@@ -30,12 +30,14 @@ module.exports = function (passport, User) {
     passwordField: 'password',
     passReqToCallback: true
   }, async function (req, username, password, done) {
-    console.log(username);
     let user = null
     try {
       user = await User.findOne({where: {
         username: username
       }})
+      if (user) {
+        console.log("log success: ", user.role);
+      }
     } catch (err) {
       return done(err)
     }
@@ -55,28 +57,17 @@ module.exports = function (passport, User) {
     }
 
     if (!user.validPassword(password)){
-      if (!user.attemptTimes) {
-        user.attemptTimes = 0
-      }
-      user.attemptTimes++
-      if (user.attemptTimes >= 5) {
-        let lockedUntilTime = new Date()
-        lockedUntilTime.setDate(lockedUntilTime.getDate() + 1)
-        user.lockedUntil = lockedUntilTime
-      }
       await user.save()
       return done("Your username or password was incorrect, please try again", false, req.flash("loginMessage", "Sai thông tin đăng nhập"), req.flash("oldEmail", username));
     }
 
-    console.log(req);
-
     // login acl
     req.session.userId = user.id;
+    req.user = user
 
       // login passport
     done(null, user);
     user.lastLogin = new Date();
-    user.attemptTimes = 0
     user.save()
 
   }));

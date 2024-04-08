@@ -30,57 +30,63 @@ require('./bootstrap')
 
 app.use(cookieParser());
 app.use(session({
-  name: CONFIG.app.sessionCookieName,
-  secret: "SecretKeyMy",
-  resave: true,
-  saveUninitialized: true,
-  store: new MysqlStore({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'web_bh_online',
-    createDatabaseTable: true,
-    clearExpired: true,
-    checkExpirationInterval: 900000,
-    expiration: 86400000 
-  })
+    name: CONFIG.app.sessionCookieName,
+    secret: "SecretKeyMy",
+    resave: true,
+    saveUninitialized: true,
+    store: new MysqlStore({
+        host: 'localhost',
+        user: 'root',
+        password: '',
+        database: 'web_bh_online',
+        createDatabaseTable: true,
+        clearExpired: true,
+        checkExpirationInterval: 900000,
+        expiration: 86400000
+    })
 }));
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({extended: true}));
 
 //--------api
 var indexRouter = require('./routes/index')
 var authRouter = require('./routes/auth')
 var productRouter = require('./routes/product')
+var adminRouter = require('./routes/admin')
+var qrRouter = require('./routes/qr')
+var transactionRouter = require('./routes/transaction')
 
 app.use('/', indexRouter)
 app.use('/auth', authRouter)
 app.use('/product', productRouter)
+app.use('/admin', adminRouter)
+app.use('/gen-qr', qrRouter)
+app.use('/transaction', transactionRouter)
 //------------
 
-app.use(function(req, res, next) {
-  return res.status(404).json({
-    status: 'error',
-    error: '404 Not Found'
-  })
+app.use(function (req, res, next) {
+    return res.status(404).json({
+        status: 'error',
+        error: '404 Not Found'
+    })
 });
-  
-  // error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
 
-  // render the error page
-  res.status(err.status || 400);
-  res.json({
-    status: 400,
-    error: err.message
-  })
+// error handler
+app.use(function (err, req, res, next) {
+    // set locals, only providing error in development
+    res.locals.message = err.message;
+    res.locals.error = req.app.get('env') === 'development' ? err : {};
+
+    // render the error page
+    res.status(err.status || 400);
+    res.json({
+        status: 400,
+        error: err.message
+    })
 });
-  
-  module.exports = app;
+
+module.exports = app;
