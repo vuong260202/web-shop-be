@@ -19,6 +19,18 @@ module.exports = function (sequelize) {
         defaultValue: '',
         allowNull: false,
       },
+        path: {
+          field: 'path',
+          type: Sequelize.STRING(100),
+          defaultValue: '',
+          allowNull: false,
+        },
+      status: {
+        field: 'STATUS',
+        type: Sequelize.ENUM('active', 'deActive'),
+        defaultValue: 'active',
+        allowNull: false,
+      },
       createdAt: {
         field: 'CREATED_AT',
         type: 'TIMESTAMP',
@@ -51,6 +63,6 @@ module.exports = function (sequelize) {
       global.sequelizeModels = {}
     }
     global.sequelizeModels.Category = Category
-    console.log('sync User done')
+    console.log('sync Category done')
   });
 }

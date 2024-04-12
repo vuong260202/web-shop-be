@@ -19,6 +19,9 @@ sequelize
     require('./mysql/Product')(sequelize);
     require('./mysql/Category')(sequelize);
     require('./mysql/Transaction')(sequelize);
+    require('./mysql/ProductCount')(sequelize);
+    require('./mysql/Rate')(sequelize);
+    require('./mysql/ProductRate')(sequelize);
 
     // Add other models as needed...
 

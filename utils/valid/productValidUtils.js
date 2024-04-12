@@ -1,3 +1,4 @@
+var Joi = require('joi');
 
 let filterProduct = (req, res, next) => {
     const schema = Joi.object({

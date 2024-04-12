@@ -3,13 +3,12 @@ var router = express.Router();
 
 const CONFIG = require('../config');
 const valid = require('../utils/valid/productValidUtils');
-const {object} = require('joi');
 const {BelongsTo, Op} = require("sequelize");
-const {json} = require("express");
+const webUtils = require('../utils/webUtils');
 
 
 router.post('/filter-product', async (req, res) => {
-    let {sort, filters} = req.body
+    let {sort, filters, type} = req.body
     let page = req.body.page ? parseInt(req.body.page) : 1;
     let pageSize = req.body.pageSize ? parseInt(req.body.pageSize) : 10;
 
@@ -17,7 +16,13 @@ router.post('/filter-product', async (req, res) => {
 
     console.log(filters);
     try {
-        filterConditions = {}
+        let filterConditions = {}
+        if (type === 'new') {
+            sort = {
+                createdAt: 'DESC'
+            }
+        }
+
         if (filters) {
             filterConditions['productName'] = {
                 [Op.like]: `%${filters.productName}%`
@@ -31,10 +36,19 @@ router.post('/filter-product', async (req, res) => {
                         as: 'category', foreignKey: 'categoryId', targetKey: 'id'
                     }),
                 },
+                {
+                    association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.ProductCount, {
+                        as: 'productCount', foreignKey: 'id', targetKey: 'productId'
+                    }),
+                },
+                {
+                    association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.ProductRate, {
+                        as: 'productRate', foreignKey: 'id', targetKey: 'productId'
+                    }),
+                }
             ],
-            offset: (page - 1) * pageSize,
             limit: pageSize,
-            logging: console.log
+            offset: (page - 1) * pageSize,
         }
 
         if (sort) {
@@ -48,6 +62,15 @@ router.post('/filter-product', async (req, res) => {
 
         total = result.count;
         products = result.rows;
+
+        // console.log(products[0].dataValues.productCount.dataValues.count)
+
+        if (type === 'hot') {
+            products = products.sort((a, b) => {
+                if(a.dataValues.productCount === null) { return 1 } else if(b.dataValues.productCount === null) { return -1 }
+                return b.dataValues.productCount.dataValues.totalCount - a.dataValues.productCount.dataValues.totalCount
+            })
+        }
 
         return res.status(200).json({
             status: 200,
@@ -65,66 +88,6 @@ router.post('/filter-product', async (req, res) => {
     }
 })
 
-
-/**
- * @api {post} product/upload-product create product
- * @apiName create product
- * @apiGroup product
- *
- * @apiBody {String} productName of product
- * @apiBody {int} price price of product
- * @apiBody {String} category category of product
- * @apiBody {int} total total of product
- *
- * @apiSuccess (200) {String} message message success
- *
- * @apiError (500) {string} message error message
- * @apiError (400) {string} message error message
- */
-router.post('/upload-product', valid.UploadProduct, async (req, res) => {
-    let Product = global.SequelizeModels.Product
-
-    try {
-        let newProduct = new Product()
-        newProduct.productName = req.body.productName
-        newProduct.price = req.body.price
-        newProduct.category = req.body.category
-        newProduct.total = req.body.total
-        newProduct.status = 'unsold'
-
-        await newProduct.save()
-    } catch (err) {
-        console.log('error: ', err);
-        return res.status(500).json({
-            status: 500,
-            message: 'Server internal error.'
-        })
-    }
-
-    return res.status(200).json({
-        status: 200,
-        message: 'upload product successfully'
-    })
-})
-
-/**
- * @api {post} product/update-product update product
- * @apiName update product
- * @apiGroup product
- *
- * @apiBody {int} productId id of product
- * @apiBody {object} attributes list attribute of product to be update
- * @apiBody {String} productName of product
- * @apiBody {int} price price of product
- * @apiBody {String} category category of product
- * @apiBody {int} total total of product
- * @apiBody {string=[sold, unsold]} status status of product
- *
- * @apiSuccess (200) {String} message message success
- *
- * @apiError (500) {string} message error message
- * @apiError (400) {string} message error message
- */
 router.post('/update-product', valid.UpdateProduct, async function (req, res) {
     try {
         let product = await global.SequelizeModels.Product.findOne({
@@ -162,18 +125,6 @@ router.post('/update-product', valid.UpdateProduct, async function (req, res) {
     }
 })
 
-/**
- * @api {delete} product/delete-product Delete a product
- * @apiName deleteProduct
- * @apiGroup product
- *
- * @apiBody {Number} productId ID of the product to be deleted
- *
- * @apiSuccess {String} message Deletion success message
- *
- * @apiError (404) {String} message Product not found
- * @apiError (500) {String} message Server error message
- */
 router.delete('/delete-product', async function (req, res) {
     try {
         const productId = req.body.productId;
@@ -210,6 +161,9 @@ router.get('/product-detail/:id', async (req, res) => {
     try {
         let Category = global.sequelizeModels.Category;
         let Product = global.sequelizeModels.Product;
+        let ProductCount = global.sequelizeModels.ProductCount;
+        let ProductRate = global.sequelizeModels.ProductRate;
+
         console.log(req.params);
         let product = await Product.findOne({
             where: req.params,
@@ -219,8 +173,19 @@ router.get('/product-detail/:id', async (req, res) => {
                         as: 'category', foreignKey: 'categoryId', targetKey: 'id'
                     }),
                 },
-            ]
+                {
+                    association: new BelongsTo(Product, ProductCount, {
+                        as: 'productCount', foreignKey: 'id', targetKey: 'productId'
+                    }),
+                },
+                {
+                    association: new BelongsTo(Product, ProductRate, {
+                        as: 'productRate', foreignKey: 'id', targetKey: 'productId'
+                    })
+                },
+            ],
         })
+
         if (!product) {
             console.log("Product not found!")
             return res.status(400).json({

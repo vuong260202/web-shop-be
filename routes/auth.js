@@ -12,30 +12,12 @@ const CONFIG = require('../config');
 const mailUtils = require('../utils/MailUtils');
 const WebUtils = require('../utils/webUtils');
 const valid = require('../utils/valid/authValidUtils');
-const {token} = require('morgan');
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
     res.redirect('/auth/login');
 });
 
-/**
- * @api {post} /auth/login Login to get jwt
- * @apiName Login JWT
- * @apiGroup Auth
- *
- * @apiBody {String} username username
- * @apiBody {String} password password
- * @apiBody {String=user,admin} [site=user] site to login
- *
- * @apiSuccess (200) {String} status 200
- * @apiSuccess (200) {Object} data response object
- * @apiSuccess (200) {String} data.token jwt token
- * @apiError (400) {Number} status 400
- * @apiError (400) {String} message the error
- * @apiError (500) {Number} status 500
- * @apiError (500) {String} message the error
- */
 router.post("/login", (req, res, next) => {
     passport.authenticate('local-login', (err, account) => {
         if (err) {
@@ -95,7 +77,7 @@ router.get('/get-role', WebUtils.isLoggedIn, (req, res) => {
     })
 })
 
-router.post("/signup", valid.Signup, (req, res, next) => {
+router.post("/signup", (req, res, next) => {
     passport.authenticate('local-signup', (err, account) => {
         if (err) {
             console.log('err', err);

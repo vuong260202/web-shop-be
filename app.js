@@ -46,6 +46,8 @@ app.use(session({
     })
 }));
 
+require('./service/startJob');
+
 app.use(logger('dev'));
 app.use(express.json());
 app.use(passport.initialize());
@@ -59,6 +61,8 @@ var productRouter = require('./routes/product')
 var adminRouter = require('./routes/admin')
 var qrRouter = require('./routes/qr')
 var transactionRouter = require('./routes/transaction')
+var categoryRouter = require('./routes/category')
+var rateRouter = require('./routes/rate')
 
 app.use('/', indexRouter)
 app.use('/auth', authRouter)
@@ -66,6 +70,8 @@ app.use('/product', productRouter)
 app.use('/admin', adminRouter)
 app.use('/gen-qr', qrRouter)
 app.use('/transaction', transactionRouter)
+app.use('/category', categoryRouter)
+app.use('/rate', rateRouter)
 //------------
 
 app.use(function (req, res, next) {

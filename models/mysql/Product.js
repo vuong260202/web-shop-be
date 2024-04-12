@@ -46,30 +46,28 @@ module.exports = function (sequelize) {
         type: Sequelize.INTEGER,
         defaultValue: 0
       },
+    status: {
+      field: 'STATUS',
+      type: Sequelize.ENUM('active', 'deActive'),
+      defaultValue: 'active',
+      allowNull: false,
+    },
       createdAt: {
         field: 'CREATED_AT',
         type: 'TIMESTAMP',
         allowNull: false,
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
-      saleAt: {
-        field: 'SALE_AT',
-        type: 'TIMESTAMP',
-        allowNull: false,
-        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-      },
+        updatedAt: {
+          field: 'UPDATED_AT',
+          type: 'TIMESTAMP',
+          allowNull: false,
+          defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+        },
     },
     {
       tableName: tableName,
       timestamps: false,
-      // instanceMethods: {
-      //   hashPassword: function (plainPassword) {
-      //     return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(8), null);
-      //   },
-      //   validPassword: function (plainPassword) {
-      //     return bcrypt.compareSync(plainPassword, this.password);
-      //   }
-      // }
     }
   );
 
@@ -78,6 +76,6 @@ module.exports = function (sequelize) {
       global.sequelizeModels = {}
     }
     global.sequelizeModels.Product = Product
-    console.log('sync User done')
+    console.log('sync Product done')
   });
 }

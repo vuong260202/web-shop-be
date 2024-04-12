@@ -68,8 +68,7 @@ function isLoggedIn1(req, res, next) {
         }
         return next()
       })
-      // console.log('req.user', req.user);
-      // console.log('req.user.email', req.user.username);
+
     })(req, res, next)
   }
   return res.status(401).json({
@@ -79,6 +78,7 @@ function isLoggedIn1(req, res, next) {
 }
 
 function isAdmin(req, res, next) {
+  console.log(req.user);
   if (req.user && req.user.role === 'admin') {
     return next();
   }
