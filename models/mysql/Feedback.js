@@ -1,10 +1,10 @@
 const Sequelize = require('sequelize');
 // var bcrypt = require('bcrypt-nodejs');
 
-const tableName = 'rate'
+const tableName = 'feedback'
 
 module.exports = function (sequelize) {
-    const Rate = sequelize.define('rate',
+    const Feedback = sequelize.define('feedback',
         {
             // attributes
             id: {
@@ -18,25 +18,19 @@ module.exports = function (sequelize) {
                 type: Sequelize.INTEGER,
                 allowNull: true,
             },
-            rate: {
-                field: 'RATE',
-                type: Sequelize.DOUBLE,
-                defaultValue: 0,
-                allowNull: false,
-            },
             userId: {
                 field: 'USER_ID',
                 type: Sequelize.INTEGER,
                 allowNull: true,
             },
+            content: {
+                field: 'CONTENT',
+                type: Sequelize.STRING(200),
+                defaultValue: '',
+                allowNull: false,
+            },
             createdAt: {
                 field: 'CREATED_AT',
-                type: 'TIMESTAMP',
-                allowNull: false,
-                defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-            },
-            updatedAt: {
-                field: 'UPDATED_AT',
                 type: 'TIMESTAMP',
                 allowNull: false,
                 defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
@@ -48,11 +42,11 @@ module.exports = function (sequelize) {
         }
     );
 
-    Rate.sync({force: false, alter: true}).then(() => {
+    Feedback.sync({force: false, alter: true}).then(() => {
         if (!global.sequelizeModels) {
             global.sequelizeModels = {}
         }
-        global.sequelizeModels.Rate = Rate
-        console.log('sync Rate done')
+        global.sequelizeModels.Feedback = Feedback
+        console.log('sync Feedback done')
     });
 }

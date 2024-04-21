@@ -10,12 +10,14 @@ module.exports = {
     db: {
         host: 'localhost',
         dbname: 'web_bh_online',
-        user: 'root'
+        user: 'myrootuser',
+        password: 'mysecretpassword',
+        port: 3308,
     },
     email: {
        urlUser: 'http://localhost:3000/#/update-password/',
        urlAdmin: 'http://localhost:3000/#/update-password/',
        username: 'tahuuvuong26@gmail.com',
-       password: 'gtnk ilbu mdnz gsxl'
+       password: ''
     },
 }

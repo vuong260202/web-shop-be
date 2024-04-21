@@ -81,6 +81,7 @@ let UpdatePassword = function(req, res, next){
   }
 
 let resetPassword = async function(req, res, next) {
+    console.log(req.body);
   const schema = Joi.object({
     resetToken: Joi.string().required(),
     newPassword: Joi.string().empty()
@@ -116,33 +117,9 @@ let resetPassword = async function(req, res, next) {
   return next();
 }
 
-let resetPasswordRequest = async function(req, res, next){
-  const schema = Joi.object({
-    username: Joi.string().required(),
-  })
-  let { error } = schema.validate(req.body)
-  if (error) {
-    console.log(error);
-    return res.status(400).json({
-      status: 400,
-      message: (error.details && error.details[0]) ? error.details[0].message : 'Invalid params'
-    })
-  }
-
-  let user = await global.sequelizeModels.User.findOne({where: {username: req.body.username}});
-  if(!user) {
-    return res.status(400).json({
-      status: 400,
-      message: 'Sorry, no account was found.' });
-  }
-
-  return next();
-}
-
 module.exports = {
     Login: login,
     Signup: signup,
     UpdatePassword: UpdatePassword,
     ResetPassword: resetPassword,
-    ResetPasswordRequest: resetPasswordRequest
 }

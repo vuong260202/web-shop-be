@@ -1,28 +1,32 @@
 const Sequelize = require('sequelize');
-// var bcrypt = require('bcrypt-nodejs');
 
-const tableName = 'product_counts'
+const tableName = 'product_statistic'
 
 module.exports = function (sequelize) {
-    const ProductCount = sequelize.define('product_counts',
+    const ProductStatistic = sequelize.define('product_statistic',
         {
             productId: {
                 field: 'PRODUCT_ID',
                 type: Sequelize.INTEGER,
-                defaultValue: 0,
-                allowNull: false,
+                allowNull: true,
             },
             transactionCount: {
-                field: 'COUNT',
+                field: 'TRANSACTION_COUNT',
+                type: Sequelize.INTEGER,
+                defaultValue: 0,
+                allowNull: false,
+            },
+            totalCount: {
+                field: 'PRODUCT_COUNT',
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 defaultValue: 0,
             },
-            totalCount: {
-                field: 'COUNT',
-                type: Sequelize.INTEGER,
+            totalRate: {
+                field: 'TOTAL_RATE',
+                type: Sequelize.DOUBLE,
                 allowNull: false,
-                defaultValue: 0,
+                defaultValue: 5.0,
             },
             createdAt: {
                 field: 'CREATED_AT',
@@ -43,11 +47,11 @@ module.exports = function (sequelize) {
         }
     );
 
-    ProductCount.sync({force: false, alter: true}).then(() => {
+    ProductStatistic.sync({force: false, alter: true}).then(() => {
         if (!global.sequelizeModels) {
             global.sequelizeModels = {}
         }
-        global.sequelizeModels.ProductCount = ProductCount
-        console.log('sync ProductCount done')
+        global.sequelizeModels.ProductStatistic = ProductStatistic
+        console.log('sync ProductStatistic done')
     });
 }

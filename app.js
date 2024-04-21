@@ -1,4 +1,3 @@
-var createError = require('http-errors');
 var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
@@ -9,7 +8,6 @@ var passport = require('passport');
 var flash = require('connect-flash');
 var session = require("express-session");
 const MysqlStore = require('express-mysql-session')(session);
-const Sequelize = require('sequelize');
 const bodyParser = require('body-parser');
 
 let CONFIG = require('./config')
@@ -36,8 +34,9 @@ app.use(session({
     saveUninitialized: true,
     store: new MysqlStore({
         host: 'localhost',
-        user: 'root',
-        password: '',
+        user: 'myrootuser',
+        password: 'mysecretpassword',
+        port: 3308,
         database: 'web_bh_online',
         createDatabaseTable: true,
         clearExpired: true,
@@ -46,14 +45,11 @@ app.use(session({
     })
 }));
 
-require('./service/startJob');
-
 app.use(logger('dev'));
 app.use(express.json());
 app.use(passport.initialize());
 app.use(passport.session());
 app.use(express.urlencoded({extended: true}));
-
 //--------api
 var indexRouter = require('./routes/index')
 var authRouter = require('./routes/auth')
@@ -63,6 +59,7 @@ var qrRouter = require('./routes/qr')
 var transactionRouter = require('./routes/transaction')
 var categoryRouter = require('./routes/category')
 var rateRouter = require('./routes/rate')
+var feedbackRouter = require('./routes/feedback')
 
 app.use('/', indexRouter)
 app.use('/auth', authRouter)
@@ -72,9 +69,11 @@ app.use('/gen-qr', qrRouter)
 app.use('/transaction', transactionRouter)
 app.use('/category', categoryRouter)
 app.use('/rate', rateRouter)
-//------------
+app.use('/feedback', feedbackRouter)
 
-app.use(function (req, res, next) {
+require('./service/startJob');
+
+app.use((req, res, next) => {
     return res.status(404).json({
         status: 'error',
         error: '404 Not Found'

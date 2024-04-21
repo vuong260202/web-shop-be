@@ -1,1 +1,1 @@
-require('./schedule')
+require('./productScheduleService')

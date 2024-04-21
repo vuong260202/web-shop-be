@@ -4,6 +4,7 @@ module.exports = exported
 var passport = require('passport');
 
 function isLoggedIn(req, res, next) {
+  console.log(req.headers.authorization)
   if (req.headers.authorization) {
     console.log('checking jwt');
     return passport.authenticate('jwt-auth', { session: false }, (err, account) => {
@@ -15,6 +16,8 @@ function isLoggedIn(req, res, next) {
         })
       }
 
+      console.log(account);
+
       if (!account) {
         console.log('err', err);
         return res.status(401).json({
@@ -22,6 +25,7 @@ function isLoggedIn(req, res, next) {
           message: 'Unauthorized'
         })
       }
+
       req.login(account, err => {
         if (err) {
           return res.status(500).json({
@@ -89,6 +93,12 @@ function isAdmin(req, res, next) {
   });
 }
 
+function formatDate(date) {
+  console.log(date);
+  return date.toISOString().replace('T', ' ').replace('Z', '');
+}
+
 exported.isLoggedIn = isLoggedIn
 exported.isLoggedIn1 = isLoggedIn1
 exported.isAdmin = isAdmin
+exported.formatDate = formatDate
