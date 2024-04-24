@@ -27,7 +27,7 @@ module.exports = function (sequelize) {
         },
       status: {
         field: 'STATUS',
-        type: Sequelize.ENUM('active', 'deActive'),
+        type: Sequelize.ENUM('active', 'deActive', 'hidden'),
         defaultValue: 'active',
         allowNull: false,
       },
@@ -65,4 +65,30 @@ module.exports = function (sequelize) {
     global.sequelizeModels.Category = Category
     console.log('sync Category done')
   });
+
+    const addProduct = (product) => {
+        Category.findOne({
+            where: {
+                categoryName: product.categoryName
+            }
+        }).then((existingUser) => {
+            if (existingUser) {
+                console.log('account already exists<<<< ');
+            } else {
+                Category.create(product)
+                    .then(newUser => {
+                        console.log(`Add product ${product.productName} done!!`);
+                    })
+                    .catch(error => {
+                        console.error('Error creating user:', error);
+                    });
+            }
+        })
+    }
+
+    addProduct({
+        categoryName: 'nike',
+        path: '/img/1713743835139.png',
+        status: 'active'
+    })
 }

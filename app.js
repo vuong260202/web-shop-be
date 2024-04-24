@@ -60,6 +60,7 @@ var transactionRouter = require('./routes/transaction')
 var categoryRouter = require('./routes/category')
 var rateRouter = require('./routes/rate')
 var feedbackRouter = require('./routes/feedback')
+var chatRouter = require('./routes/chat')
 
 app.use('/', indexRouter)
 app.use('/auth', authRouter)
@@ -70,6 +71,7 @@ app.use('/transaction', transactionRouter)
 app.use('/category', categoryRouter)
 app.use('/rate', rateRouter)
 app.use('/feedback', feedbackRouter)
+app.use('/chat', chatRouter)
 
 require('./service/startJob');
 

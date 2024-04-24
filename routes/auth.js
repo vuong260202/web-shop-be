@@ -52,6 +52,7 @@ router.post("/login", (req, res, next) => {
         return res.status(200).json({
             status: 200,
             data: {
+                username: account.username,
                 role: account.role,
                 token: token
             }
@@ -116,6 +117,13 @@ router.post("/signup", (req, res, next) => {
     })(req, res, next)
 });
 
+router.get('/detail', WebUtils.isLoggedIn, (req, res) => {
+    return res.status(200).json({
+        status: 200,
+        data: req.user
+    })
+})
+
 router.put('/update-password', WebUtils.isLoggedIn, valid.UpdatePassword, checkDbConnector, async (req, res) => {
     const {currentPassword, newPassword} = req.body;
 
@@ -143,6 +151,37 @@ router.put('/update-password', WebUtils.isLoggedIn, valid.UpdatePassword, checkD
         return res.status(200).json({
             status: 200,
             message: 'Password updated successfully'
+        });
+    } catch (e) {
+        console.error('An error occurred:', e);
+        return res.status(500).json(
+            {
+                status: 500,
+                message: 'An error occurred while updating password'
+            }
+        );
+    }
+});
+
+router.post('/update-profile', WebUtils.isLoggedIn, async (req, res) => {
+    const {currentPassword, newPassword} = req.body;
+    const User = global.sequelizeModels.User;
+
+    try {
+
+        await User.update({
+            fullname: req.body.fullname,
+            numberPhone: req.body.numberPhone,
+            address: req.body.address,
+        }, {
+            where: {
+                id: req.user.id
+            }
+        })
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Updated user successfully'
         });
     } catch (e) {
         console.error('An error occurred:', e);
@@ -292,15 +331,22 @@ router.put('/check-token-expire', checkDbConnector, async (req, res) => {
 });
 
 router.post('/update-avatar', WebUtils.isLoggedIn, upload.single('file'), async (req, res) => {
+    console.log(req.body);
     try {
-        let user = await global.sequelizeModels.User.findOne({
-            id: req.user.id
-        })
+        let user = req.user;
+
+        console.log("user: ", req.file);
 
         req.file.path = req.file.path.replace(/\\/g, '/');
         user.avatar = req.file.path.slice(req.file.path.indexOf('/img/'));
 
-        await user.save();
+        await global.sequelizeModels.User.update({
+            avatar: user.avatar
+        }, {
+            where: {
+                id: req.user.id
+            }
+        })
 
         return res.status(200).json({
             status: 200,

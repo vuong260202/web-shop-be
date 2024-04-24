@@ -1,21 +1,25 @@
 var express = require('express');
 var router = express.Router();
-const {BelongsTo, Op, HasMany, HasOne, BelongsToMany, Association, Sequelize} = require("sequelize");
+const {BelongsTo, Op, HasMany} = require("sequelize");
 const {formatDate, isLoggedIn1, isLoggedIn} = require("../utils/webUtils");
-const cron = require("cron");
 
 
 router.post('/filter-product', async (req, res, next) => {
-    let {sort, filters, type} = req.body
+    let {sort, filters, type, isAll} = req.body
     let page = req.body.page ? parseInt(req.body.page) : 1;
     let pageSize = req.body.pageSize ? parseInt(req.body.pageSize) : 10;
 
     let products, total
 
-    console.log(filters);
+    console.log(req.body);
     try {
         let filterConditions = {
-            status: 'active'
+            status: isAll ? {
+                [Op.in]: ['active', 'hidden'],
+            } : 'active',
+            productName: {
+                [Op.like]: `%${filters?.productName ?? ''}%`
+            },
         }
         if (type === 'new') {
             sort = {
@@ -23,11 +27,12 @@ router.post('/filter-product', async (req, res, next) => {
             }
         }
 
-        if (filters) {
-            filterConditions['productName'] = {
-                [Op.like]: `%${filters.productName}%`
+        if (filters?.categories) {
+            filterConditions.categoryId = {
+                [Op.in]: filters.categories
             }
         }
+
         let conditions = {
             where: filterConditions,
             include:[
@@ -189,8 +194,8 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
 
                     include: [
                         {
-                            association: new HasMany(ProductStatistic, Feedback, {
-                                as: 'feedback', foreignKey: 'productId', targetKey: 'productId'
+                            association: new HasMany(Feedback, ProductStatistic, {
+                                as: 'feedback', targetKey: 'productId', foreignKey: 'productId'
                             }),
 
                             include: [
@@ -220,6 +225,8 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
                 message: "Product not found!"
             });
         }
+
+
         //
         product = product.dataValues;
         product.category = product.category.dataValues.categoryName;
@@ -233,6 +240,18 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
             })
         }
 
+        console.log(product.categoryId);
+        product.productBrands = await Product.findAll({
+            attributes: [['PRODUCT_NAME', 'productName'], ['ID', 'id'], ['PATH', 'path']],
+            where: {
+                id: {
+                    [Op.ne]: product.id
+                },
+                categoryId: product.categoryId,
+            },
+            limit: 3,
+        })
+
         product.productStatistic = {
             totalRate: product.productStatistic.totalRate,
             transactionCount: product.productStatistic.transactionCount,
@@ -242,14 +261,12 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
                     content: feedback.content,
                     rate: feedback.rate,
                     createdAt: formatDate(feedback.createdAt),
-                    author: feedback.user.fullname,
+                    author: feedback.user?.fullname,
                     userId: feedback.userId,
                     rate: feedback.rates.rate
                 };
             })
         }
-
-        console.log(product)
 
         return res.status(200).json({
             status: 200,

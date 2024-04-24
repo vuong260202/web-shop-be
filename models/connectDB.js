@@ -21,6 +21,8 @@ sequelize
     require('./mysql/ProductStatistic')(sequelize);
     require('./mysql/Rate')(sequelize);
     require('./mysql/Feedback')(sequelize);
+    require('./mysql/Chat')(sequelize);
+    require('./mysql/ChatContent')(sequelize);
 
     // Add other models as needed...
 

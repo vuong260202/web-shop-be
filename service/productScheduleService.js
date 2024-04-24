@@ -1,7 +1,7 @@
 const cron = require('cron');
 const {BelongsTo, HasMany} = require("sequelize");
 
-const updateJobSchedule = new cron.CronJob('0 * * * *', async () => {
+const updateJobSchedule = new cron.CronJob('* * * * *', async () => {
     let ProductStatistic = global.sequelizeModels.ProductStatistic;
     let Rate = global.sequelizeModels.Rate;
     let Transaction = global.sequelizeModels.Transaction;

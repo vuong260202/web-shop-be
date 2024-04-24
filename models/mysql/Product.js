@@ -1,4 +1,5 @@
 const Sequelize = require('sequelize');
+const {add} = require("nodemon/lib/rules");
 // var bcrypt = require('bcrypt-nodejs');
 
 const tableName = 'products'
@@ -54,7 +55,7 @@ module.exports = function (sequelize) {
             },
             status: {
                 field: 'STATUS',
-                type: Sequelize.ENUM('active', 'deActive'),
+                type: Sequelize.ENUM('active', 'deActive', 'hidden'),
                 defaultValue: 'active',
                 allowNull: false,
             },
@@ -86,4 +87,55 @@ module.exports = function (sequelize) {
 
         console.log('sync Product done')
     });
+
+    const addProduct = (product) => {
+        Product.findOne({
+            where: {
+                productName: product.productName
+            }
+        }).then((existingProduct) => {
+            if (existingProduct) {
+                console.log('product already exists<<<< ');
+            } else {
+                Product.create(product)
+                    .then(newUser => {
+                        console.log(`Add product ${product.productName} done!!`);
+                    })
+                    .catch(error => {
+                        console.error('Error creating user:', error);
+                    });
+            }
+        })
+    }
+
+    addProduct({
+        productName: 'test1',
+        price: 100000,
+        categoryId: 1,
+        sizes: '[1, 2, 3]',
+        description: '',
+        path: '/img/1713726098183.webp',
+        total: 10,
+        status: 'active'
+    })
+    addProduct({
+        productName: 'test2',
+        price: 100000,
+        categoryId: 1,
+        sizes: '[1, 2, 3]',
+        description: '',
+        path: '/img/1713726103813.jpg',
+        total: 10,
+        status: 'active'
+    })
+    addProduct({
+        productName: 'test3',
+        price: 100000,
+        categoryId: 1,
+        sizes: '[1, 2, 3]',
+        description: '',
+        path: '/img/1713726116307.png',
+        total: 10,
+        status: 'active'
+    })
 }

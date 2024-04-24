@@ -31,6 +31,7 @@ router.post('/update-product', upload.single('file'), isLoggedIn, isAdmin, async
         product.price = req.body.price;
         product.total = req.body.total;
         product.sizes = req.body.sizes;
+        product.updatedAt = new Date();
         product.description = req.body.description ?? '';
         if(req.file) {
             req.file.path = req.file.path.replace(/\\/g, '/');
@@ -81,6 +82,8 @@ router.post('/update-transaction', isLoggedIn, isAdmin, async (req, res, next) =
             } else if (transaction.status === 'IN-PROGRESS') {
                 transaction.status = 'DONE'
             }
+
+            transaction.updatedAt = new Date();
 
             updatePromises.push(transaction.save());
         }
@@ -264,6 +267,41 @@ router.post('/delete-category', async function (req, res) {
     }
 });
 
+router.post('/update-category', isLoggedIn, isAdmin, upload.single('file'), async (req, res) => {
+    let Category = global.sequelizeModels.Category;
 
+    try {
+        let category = await Category.findOne(req.body.categoryId);
+
+        if (!category) {
+            console.log("category not found");
+            return res.status(400).json({
+                status: 400,
+                message: 'Category not found.'
+            })
+        }
+
+        category.categoryName = req.body.categoryName;
+        category.updatedAt = new Date();
+
+        if(req.file) {
+            req.file.path = req.file.path.replace(/\\/g, '/');
+            category.path = req.file.path.slice(req.file.path.indexOf('/img/'));
+        }
+
+        await category.save();
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Category updated successfully.'
+        });
+    } catch (err) {
+        console.log('error: ', err);
+        return res.status(500).json({
+            status: 500,
+            message: 'Server internal error.'
+        })
+    }
+})
 
 module.exports = router;
