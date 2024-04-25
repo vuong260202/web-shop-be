@@ -65,6 +65,12 @@ module.exports = function (sequelize) {
                 allowNull: false,
                 defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
             },
+            updatedAt: {
+                field: 'UPDATED_AT',
+                type: 'TIMESTAMP',
+                allowNull: false,
+                defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
+            },
         },
         {
             tableName: tableName,

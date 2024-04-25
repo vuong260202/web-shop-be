@@ -31,7 +31,7 @@ module.exports = function (sequelize) {
                 defaultValue: '',
                 allowNull: false,
             },
-            name: {
+            fullname: {
                 field: 'NAME',
                 type: Sequelize.STRING(100),
                 defaultValue: '',
@@ -69,17 +69,10 @@ module.exports = function (sequelize) {
                 defaultValue: 'user',
                 allowNull: false
             },
-            lockedUntil: {
-                field: 'LOCKED_UNTIL',
-                type: 'TIMESTAMP',
-                allowNull: false,
-                defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
-            },
-            attemptTimes: {
-                field: 'ATTEMP_TIMES',
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                defaultValue: 0
+            avatar: {
+                field: 'AVATAR',
+                type: Sequelize.STRING(100),
+                defaultValue: null,
             },
             createdAt: {
                 field: 'CREATED_AT',
@@ -97,14 +90,6 @@ module.exports = function (sequelize) {
         {
             tableName: tableName,
             timestamps: false,
-            // instanceMethods: {
-            //   hashPassword: function (plainPassword) {
-            //     return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(8), null);
-            //   },
-            //   validPassword: function (plainPassword) {
-            //     return bcrypt.compareSync(plainPassword, this.password);
-            //   }
-            // }
         }
     );
 
@@ -126,44 +111,43 @@ module.exports = function (sequelize) {
         return bcrypt.compareSync(plainPassword, this.password);
     }
 
-    User.findOne({where: {username: 'admin'}})
-        .then(existingUser => {
+    const addUser = (user) => {
+        User.findOne({
+            where: {
+                username: user.username
+            }
+        }).then((existingUser) => {
             if (existingUser) {
-                console.log('account already exists: ', existingUser);
+                console.log('account already exists<<<< ');
             } else {
-                let newAdmin = {
-                    username: 'admin',
-                    password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null)
-                }
-
-                User.create(newAdmin)
+                User.create(user)
                     .then(newUser => {
-                        console.log('New user created:', newAdmin);
+                        console.log(`Sync account role ${user.role} done!!`);
                     })
                     .catch(error => {
                         console.error('Error creating user:', error);
                     });
             }
         })
+    }
 
-    User.findOne({where: {username: 'user'}})
-        .then(existingUser => {
-            if (existingUser) {
-                console.log('account already exists: ', existingUser);
-            } else {
-                let newUser = {
-                    username: 'user',
-                    password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null),
-                    role: 'admin'
-                }
+    addUser({
+        username: 'admin',
+        password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null),
+        role: 'admin',
+        fullname: "admin",
+        address: 'address',
+        numberPhone: '1234567890',
+        email: 'admin@gmail.com'
+    })
 
-                User.create(newUser)
-                    .then(newUser => {
-                        console.log('New user created:', newUser);
-                    })
-                    .catch(error => {
-                        console.error('Error creating user:', error);
-                    });
-            }
-        })
+    addUser({
+        username: 'user',
+        password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null),
+        role: 'user',
+        fullname: "user",
+        address: 'address',
+        numberPhone: '1234567890',
+        email: 'user@gmail.com'
+    })
 }

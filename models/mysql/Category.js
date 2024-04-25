@@ -19,6 +19,18 @@ module.exports = function (sequelize) {
         defaultValue: '',
         allowNull: false,
       },
+        path: {
+          field: 'path',
+          type: Sequelize.STRING(100),
+          defaultValue: '',
+          allowNull: false,
+        },
+      status: {
+        field: 'STATUS',
+        type: Sequelize.ENUM('active', 'deActive', 'hidden'),
+        defaultValue: 'active',
+        allowNull: false,
+      },
       createdAt: {
         field: 'CREATED_AT',
         type: 'TIMESTAMP',
@@ -51,6 +63,32 @@ module.exports = function (sequelize) {
       global.sequelizeModels = {}
     }
     global.sequelizeModels.Category = Category
-    console.log('sync User done')
+    console.log('sync Category done')
   });
+
+    const addProduct = (product) => {
+        Category.findOne({
+            where: {
+                categoryName: product.categoryName
+            }
+        }).then((existingUser) => {
+            if (existingUser) {
+                console.log('account already exists<<<< ');
+            } else {
+                Category.create(product)
+                    .then(newUser => {
+                        console.log(`Add product ${product.productName} done!!`);
+                    })
+                    .catch(error => {
+                        console.error('Error creating user:', error);
+                    });
+            }
+        })
+    }
+
+    addProduct({
+        categoryName: 'nike',
+        path: '/img/1713743835139.png',
+        status: 'active'
+    })
 }

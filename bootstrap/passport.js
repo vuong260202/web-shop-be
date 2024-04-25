@@ -38,6 +38,11 @@ module.exports = function (passport, User) {
       if (user) {
         console.log("log success: ", user.role);
       }
+
+      if (user.role !== req.body.role) {
+        return done("Your username or password was incorrect, please try again", false, req.flash("loginMessage", "Sai thông tin đăng nhập"), req.flash("oldEmail", username));
+      }
+
     } catch (err) {
       return done(err)
     }
@@ -77,6 +82,8 @@ module.exports = function (passport, User) {
     passwordField: 'password',
     emailField: 'email',
     fullnameField: 'fullname',
+    addressField: 'address',
+    numberPhoneField: 'numberPhone',
     passReqToCallback: true
   }, async function (req, username, password, done) {
     let user = null
@@ -103,6 +110,8 @@ module.exports = function (passport, User) {
     newUser.password = newUser.hashPassword(password);
     newUser.email = req.body.email;
     newUser.fullname = req.body.fullname;
+    newUser.address = req.body.address;
+    newUser.phone = req.body.phone;
     newUser.created_at = new Date();
     await newUser.save()
     

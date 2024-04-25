@@ -1,3 +1,4 @@
+var Joi = require('joi');
 
 let filterProduct = (req, res, next) => {
     const schema = Joi.object({
@@ -9,14 +10,14 @@ let filterProduct = (req, res, next) => {
     })
     let { error } = schema.validate(req.body)
     if (error) {
-        console.log(error);
+        // console.log(error);
         return res.status(400).json({
         status: 400,
         message: (error.details && error.details[0]) ? error.details[0].message : 'Invalid body'
         })
     }
     
-    return next()
+    next()
 }
 
 let uploadProduct = (req, res, next) => {
@@ -35,7 +36,7 @@ let uploadProduct = (req, res, next) => {
         })
     }
     
-    return next()
+    next()
 }
 
 let updateProduct = (req, res, next) => {
@@ -57,7 +58,7 @@ let updateProduct = (req, res, next) => {
         })
     }
     
-    return next()
+    next()
 }
 
 let deleteProduct = (req, res, next) => {
@@ -73,7 +74,7 @@ let deleteProduct = (req, res, next) => {
         })
     }
     
-    return next()
+    next()
 }
 
 module.exports = {

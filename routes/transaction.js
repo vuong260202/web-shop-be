@@ -1,5 +1,5 @@
 var express = require('express')
-const {Transaction, BelongsTo, where} = require("sequelize");
+const {BelongsTo, Op} = require("sequelize");
 var router = express.Router()
 
 const webUtils = require('../utils/webUtils');
@@ -12,19 +12,18 @@ router.get('/', function (req, res) {
 })
 
 router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
-    let {productId, name, numberPhone, address, size, count, total} = req.body;
 
-    // console.log(req.)
+    console.log(req.body)
     let Transaction = global.sequelizeModels.Transaction;
     let newTransaction = await Transaction.create(
         {
-            productId: productId,
-            buyerName: name !== '' ? name : req.user.name,
-            numberPhone: numberPhone !== '' ? numberPhone : req.user.numberPhone,
-            address: address !== '' ? address : req.user.address,
-            count: count,
-            totalAmount: total,
-            size: size,
+            productId: req.body.productId,
+            buyerName: req.user?.fullname ?? req.body.name,
+            numberPhone: req.user?.numberPhone ?? req.body.numberPhone,
+            address: req.user?.address ?? req.body.address,
+            count: req.body.count,
+            totalAmount: req.body.total,
+            size: req.body.size,
             userId: req.user?.id,
             status: "PENDING",
             createdAt: new Date()
@@ -34,8 +33,6 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
     await newTransaction.save();
 
     console.log(newTransaction)
-    // let user = global.sequelizeModels.User.findOne(req.body.userId);
-    // let value = user.userId + user.name;
 
     return res.status(200).json({
         status: 200,
@@ -43,10 +40,11 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
     });
 })
 
-router.post('/all', webUtils.isLoggedIn, async (req, res) => {
+router.post('/filter-transactions', webUtils.isLoggedIn, async (req, res) => {
     console.log(">>>")
     let Transaction = global.sequelizeModels.Transaction;
     let Product = global.sequelizeModels.Product;
+    let User = global.sequelizeModels.User;
     let data;
 
     let conditions = {}
@@ -55,12 +53,14 @@ router.post('/all', webUtils.isLoggedIn, async (req, res) => {
         conditions.status = req.body.status;
     }
 
-    console.log(req.user);
+    console.log(req.user?.role);
 
-    if(req.user.role === 'user') {
-        console.log(req.user.userId);
-        conditions.userId = req.user.userId;
+    if(req.user?.role === 'user') {
+        console.log(req.user?.id);
+        conditions.userId = req.user?.id;
     }
+
+    console.log(conditions)
 
     data = await Transaction.findAndCountAll(
         {
@@ -71,15 +71,31 @@ router.post('/all', webUtils.isLoggedIn, async (req, res) => {
                         as: 'product', foreignKey: 'productId', targetKey: 'id'
                     }),
                 },
-            ]
+                {
+                    association: new BelongsTo(Transaction, User, {
+                        as: 'user', foreignKey: 'userId', targetKey: 'id'
+                    }),
+                },
+            ],
+            order: [["updatedAt", "desc"]]
         }
     );
 
-    data.map(dt => {
-        let newData = dt.dataValues;
-        newData.productName = newData.product.productName;
+    data.rows = data.rows.filter(transaction => transaction.product.status !== 'deActive');
 
-        return newData;
+    data = data.rows.map(dt => {
+        let data = dt.dataValues;
+        data.productName = data.product.productName;
+
+        if (data.user) {
+            data.buyerName = data.user?.fullname;
+            data.numberPhone = data.user?.numberPhone;
+            data.address = data.user?.address;
+        }
+
+        data.createdAt = webUtils.formatDate(data.createdAt);
+
+        return data;
     })
 
     console.log(data);
@@ -87,6 +103,70 @@ router.post('/all', webUtils.isLoggedIn, async (req, res) => {
     return res.status(200).json({
         status: 200,
         data: data
+    })
+})
+
+router.post('/delete-transactions', webUtils.isLoggedIn, async (req, res) => {
+    let Transaction = global.sequelizeModels.Transaction;
+
+    console.log(req.body.transactionIds)
+
+    try {
+        await Transaction.destroy({
+            where: {
+                id: {
+                    [Op.in]: req.body.transactionIds
+                }
+            }
+        })
+    } catch (err) {
+        console.log('error: ', err);
+        return res.status(500).json({
+            status: 500,
+            message: 'Server internal error.'
+        });
+    }
+
+    return res.status(200).json({
+        status: 200,
+        message: "delete transactions success"
+    })
+})
+
+router.get('/:productId/transaction-detail', webUtils.isLoggedIn, async (req, res) => {
+
+    let Transaction = global.sequelizeModels.Transaction;
+    let User = global.sequelizeModels.User;
+    let Rate = global.sequelizeModels.Rate;
+
+    let transactions = await Transaction.findAndCountAll({
+        where: {
+            productId: req.params.productId,
+            userId: req.user.id
+        },
+    })
+
+    let rate = await Rate.findOne({
+        where: {
+            productId: req.params.productId,
+            userId: req.user.id
+        },
+    })
+
+    let total = transactions.count;
+    transactions = transactions.rows.map((transaction) => {
+        return transaction;
+    });
+
+
+    console.log(transactions);
+
+    return res.status(200).json({
+        status: 200,
+        data: {
+            total: transactions.count,
+            transactions: transactions.rows
+        }
     })
 })
 

@@ -2,40 +2,34 @@ var express = require('express');
 var router = express.Router();
 var passport = require('passport');
 var randomstring = require("randomstring");
-const ExtractJwt = require('passport-jwt').ExtractJwt;
 const jwt = require('jsonwebtoken');
-const Joi = require('joi');
 const _ = require('lodash');
 
 const CONFIG = require('../config');
-
 const mailUtils = require('../utils/MailUtils');
 const WebUtils = require('../utils/webUtils');
 const valid = require('../utils/valid/authValidUtils');
-const {token} = require('morgan');
+const multer = require("multer");
+const path = require("path");
+const Joi = require("joi");
+
+const storage = multer.diskStorage({
+    destination: function(req, file, cb) {
+        cb(null, '../web-shop-fe/public/img/avatar');
+    },
+    filename: function(req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({storage});
+
 
 /* GET home page. */
 router.get('/', function (req, res, next) {
     res.redirect('/auth/login');
 });
 
-/**
- * @api {post} /auth/login Login to get jwt
- * @apiName Login JWT
- * @apiGroup Auth
- *
- * @apiBody {String} username username
- * @apiBody {String} password password
- * @apiBody {String=user,admin} [site=user] site to login
- *
- * @apiSuccess (200) {String} status 200
- * @apiSuccess (200) {Object} data response object
- * @apiSuccess (200) {String} data.token jwt token
- * @apiError (400) {Number} status 400
- * @apiError (400) {String} message the error
- * @apiError (500) {Number} status 500
- * @apiError (500) {String} message the error
- */
 router.post("/login", (req, res, next) => {
     passport.authenticate('local-login', (err, account) => {
         if (err) {
@@ -58,6 +52,7 @@ router.post("/login", (req, res, next) => {
         return res.status(200).json({
             status: 200,
             data: {
+                username: account.username,
                 role: account.role,
                 token: token
             }
@@ -95,7 +90,7 @@ router.get('/get-role', WebUtils.isLoggedIn, (req, res) => {
     })
 })
 
-router.post("/signup", valid.Signup, (req, res, next) => {
+router.post("/signup", (req, res, next) => {
     passport.authenticate('local-signup', (err, account) => {
         if (err) {
             console.log('err', err);
@@ -121,6 +116,13 @@ router.post("/signup", valid.Signup, (req, res, next) => {
         })
     })(req, res, next)
 });
+
+router.get('/detail', WebUtils.isLoggedIn, (req, res) => {
+    return res.status(200).json({
+        status: 200,
+        data: req.user
+    })
+})
 
 router.put('/update-password', WebUtils.isLoggedIn, valid.UpdatePassword, checkDbConnector, async (req, res) => {
     const {currentPassword, newPassword} = req.body;
@@ -161,10 +163,62 @@ router.put('/update-password', WebUtils.isLoggedIn, valid.UpdatePassword, checkD
     }
 });
 
-router.post('/reset-password-request', checkDbConnector, valid.ResetPasswordRequest, async (req, res) => {
+router.post('/update-profile', WebUtils.isLoggedIn, async (req, res) => {
+    const {currentPassword, newPassword} = req.body;
+    const User = global.sequelizeModels.User;
+
     try {
-        const {username} = req.body;
-        let user = await global.sequelizeModels.User.findOne({where: {username: username}});
+
+        await User.update({
+            fullname: req.body.fullname,
+            numberPhone: req.body.numberPhone,
+            address: req.body.address,
+        }, {
+            where: {
+                id: req.user.id
+            }
+        })
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Updated user successfully'
+        });
+    } catch (e) {
+        console.error('An error occurred:', e);
+        return res.status(500).json(
+            {
+                status: 500,
+                message: 'An error occurred while updating password'
+            }
+        );
+    }
+});
+
+router.post('/reset-password-request', async function(req, res, next) {
+    const schema = Joi.object({
+        email: Joi.string().email().required(),
+    })
+    let { error } = schema.validate(req.body)
+    if (error) {
+        console.log(error);
+        return res.status(400).json({
+            status: 400,
+            message: (error.details && error.details[0]) ? error.details[0].message : 'Invalid params'
+        })
+    }
+
+    let user = await global.sequelizeModels.User.findOne({where: {email: req.body.email}});
+    if(!user) {
+        return res.status(400).json({
+            status: 400,
+            message: 'Sorry, no account was found.' });
+    }
+
+    return next();
+}, async (req, res) => {
+    try {
+        let user = await global.sequelizeModels.User.findOne({where: {email: req.body.email}});
+
         if (!user) {
             return res.status(400).json({
                 status: 400,
@@ -172,16 +226,16 @@ router.post('/reset-password-request', checkDbConnector, valid.ResetPasswordRequ
             });
         }
 
-        const resetToken = randomstring.generate(20);
+        const resetOtp = Math.floor(100000 + Math.random() * 900000);
 
         const expirationTime = new Date();
-        expirationTime.setMinutes(expirationTime.getMinutes() + 5);
+        expirationTime.setMinutes(expirationTime.getMinutes() + 10);
 
-        user.resetToken = resetToken;
+        user.resetToken = resetOtp;
         user.resetTokenExpiration = expirationTime;
         user.save();
 
-        await mailUtils.transporter.sendMail(mailUtils.mailOptions(resetToken, user), (error, info) => {
+        await mailUtils.transporter.sendMail(mailUtils.mailOptions(resetOtp, user), (error, info) => {
             if (error) {
                 console.error('Error sending email:', error);
                 return res.status(500).json({
@@ -204,7 +258,7 @@ router.post('/reset-password-request', checkDbConnector, valid.ResetPasswordRequ
     }
 });
 
-router.put('/reset-password', valid.ResetPassword, checkDbConnector, async (req, res) => {
+router.put('/reset-password', valid.ResetPassword, async (req, res) => {
     try {
         const {resetToken, newPassword} = req.body;
 
@@ -215,7 +269,7 @@ router.put('/reset-password', valid.ResetPassword, checkDbConnector, async (req,
         if (user.resetTokenExpiration && currentTime > user.resetTokenExpiration) {
             return res.status(400).json({
                 status: 400,
-                message: 'Your Password reset link is expired. Please try again.'
+                message: 'Sorry, no account was found.'
             });
         }
 
@@ -224,15 +278,9 @@ router.put('/reset-password', valid.ResetPassword, checkDbConnector, async (req,
         user.resetTokenExpiration = null;
         await user.save();
 
-        let payload = {id: user.id};
-        let opts = {}
-        opts.expiresIn = CONFIG.app.jwtOptions.expiresIn
-        let token = jwt.sign(payload, CONFIG.app.jwtOptions.secretOrKey, opts);
         return res.status(200).json({
             status: 200,
-            data: {
-                token: token
-            }
+            message: "reset password successfully!"
         })
 
 //    return res.status(200).json({ message: 'Password reset successfully' });
@@ -281,6 +329,37 @@ router.put('/check-token-expire', checkDbConnector, async (req, res) => {
         });
     }
 });
+
+router.post('/update-avatar', WebUtils.isLoggedIn, upload.single('file'), async (req, res) => {
+    console.log(req.body);
+    try {
+        let user = req.user;
+
+        console.log("user: ", req.file);
+
+        req.file.path = req.file.path.replace(/\\/g, '/');
+        user.avatar = req.file.path.slice(req.file.path.indexOf('/img/'));
+
+        await global.sequelizeModels.User.update({
+            avatar: user.avatar
+        }, {
+            where: {
+                id: req.user.id
+            }
+        })
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Avatar updated successfully'
+        })
+    } catch (e) {
+        console.error('An error occurred:', e);
+        return res.status(500).json({
+            status: 500,
+            message: 'An error occurred while processing the request'
+        });
+    }
+})
 
 function checkDbConnector(req, res, next) {
     if (!global.sequelizeModels || !global.sequelizeModels.User) {
