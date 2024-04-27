@@ -89,6 +89,118 @@ router.post('/filter-product', async (req, res, next) => {
     }
 })
 
+router.post('/filter-statistic', async (req, res, next) => {
+    console.log(req.body);
+    let {sort, filters, type, isAll} = req.body
+
+    let total
+
+    console.log(req.body);
+    console.log(new Date(req.body.year, ))
+    try {
+        let filterConditions = {
+        }
+
+        let products = await global.sequelizeModels.Product.findAndCountAll({
+            where: {
+                status: {
+                    [Op.in]: ['active', 'hidden'],
+                }
+            },
+            include:[
+                {
+                    association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.Category, {
+                        as: 'category', foreignKey: 'categoryId', targetKey: 'id'
+                    }),
+                },
+                {
+                    association: new HasMany(global.sequelizeModels.Product, global.sequelizeModels.Transaction, {
+                        as: 'transactions', targetKey: 'id', foreignKey: 'productId', required: false
+                    }),
+                },
+                {
+                    association: new HasMany(global.sequelizeModels.Product, global.sequelizeModels.Rate, {
+                        as: 'rates', targetKey: 'id', foreignKey: 'productId', required: false
+                    }),
+                },
+                {
+                    association: new HasMany(global.sequelizeModels.Product, global.sequelizeModels.Feedback, {
+                        as: 'feedbacks', targetKey: 'id', foreignKey: 'productId', required: false
+                    }),
+                }
+            ]
+        })
+
+        total = products.count;
+        products = products.rows;
+
+        if (req.body.year !== 0) {
+            if (req.body.month === 0) {
+                for (let product of products) {
+                    product.dataValues.transactions = product.dataValues.transactions.filter(transaction => {
+                        return transaction.dataValues.createdAt.getFullYear() === req.body.year && transaction.dataValues.status === 'DONE'
+                    })
+                }
+            } else {
+                for (let product of products) {
+                    product.dataValues.transactions = product.dataValues.transactions.filter(transaction => {
+                        return transaction.dataValues.createdAt.getFullYear() === req.body.year &&
+                            transaction.dataValues.createdAt.getMonth() === req.body.month - 1
+                            && transaction.dataValues.status === 'DONE'
+                    })
+                }
+            }
+        } else {
+            for (let product of products) {
+                product.dataValues.transactions = product.dataValues.transactions.filter(transaction => {
+                    return transaction.dataValues.status === 'DONE'
+                })
+            }
+        }
+
+        // console.log(products);
+
+        products.map(product => {
+            console.log(product.id);
+            product.dataValues = {
+                id: product.dataValues.id,
+                productName: product.dataValues.productName,
+                categoryId: product.dataValues.category.dataValues.id,
+                categoryName: product.dataValues.category.dataValues.categoryName,
+                transactionCount: product.dataValues.transactions.length,
+                totalCount: product.dataValues.transactions.reduce((total, transaction) => {
+                    return total + transaction.dataValues.count
+                }, 0),
+                totalRate: (product.dataValues.rates.reduce((total, rate) => {
+                    return total + rate.dataValues.rate
+                }, 0) / product.dataValues.rates.length),
+                totalAmount: product.dataValues.transactions.reduce((total, transaction) => {
+                    return total + transaction.dataValues.totalAmount
+                }, 0),
+                rateCount: product.dataValues.rates.length,
+                feedbackCount: product.dataValues.feedbacks.length
+            };
+
+            return product;
+        })
+
+        products.sort((a, b) => b.dataValues.totalAmount - a.dataValues.totalAmount);
+
+        return res.status(200).json({
+            status: 200,
+            data: {
+                total: total,
+                products: products
+            }
+        })
+    } catch (err) {
+        return res.status(500).json({
+            status: 500,
+            message: 'Server internal error.'
+        })
+    }
+})
+
 router.post('/all-product', async (req, res, next) => {
     let products, total
     try {

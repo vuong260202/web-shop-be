@@ -18,9 +18,9 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
     let newTransaction = await Transaction.create(
         {
             productId: req.body.productId,
-            buyerName: req.user?.fullname ?? req.body.name,
-            numberPhone: req.user?.numberPhone ?? req.body.numberPhone,
-            address: req.user?.address ?? req.body.address,
+            buyerName: req.body.name,
+            numberPhone: req.body.numberPhone,
+            address: req.body.address,
             count: req.body.count,
             totalAmount: req.body.total,
             size: req.body.size,

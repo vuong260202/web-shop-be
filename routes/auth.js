@@ -12,6 +12,7 @@ const valid = require('../utils/valid/authValidUtils');
 const multer = require("multer");
 const path = require("path");
 const Joi = require("joi");
+const bcrypt = require("bcrypt-nodejs");
 
 const storage = multer.diskStorage({
     destination: function(req, file, cb) {
@@ -354,6 +355,93 @@ router.post('/update-avatar', WebUtils.isLoggedIn, upload.single('file'), async 
         })
     } catch (e) {
         console.error('An error occurred:', e);
+        return res.status(500).json({
+            status: 500,
+            message: 'An error occurred while processing the request'
+        });
+    }
+})
+
+router.post('/login-with-google', async (req, res) => {
+    console.log(req.body);
+
+    try {
+        let user = await global.sequelizeModels.User.findOne({
+            where: {
+                email: req.body.email
+            }
+        })
+
+        console.log(user);
+
+        let account;
+
+        if (!user) {
+            if (req.body.role === 'admin') {
+                return res.status(400).json({
+                    status: 400,
+                    message: 'Sorry, no account was found.'
+                })
+            }
+
+            let result = '';
+            let isUsernameDone = true;
+
+            do {
+                const length = 16;
+                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                for (let i = 0; i < length; i++) {
+                    result += characters.charAt(Math.floor(Math.random() * characters.length));
+                }
+
+                const ur = await global.sequelizeModels.User.findOne({
+                    where: {
+                        username: result
+                    }
+                })
+
+                isUsernameDone = !!ur;
+            } while (!isUsernameDone);
+
+            let newUser = await global.sequelizeModels.User.create({
+                username: result,
+                password: bcrypt.hashSync('999', bcrypt.genSaltSync(8), null),
+                email: req.body.email,
+                fullname: req.body.name,
+                googleId: req.body.googleId
+            })
+
+            await newUser.save();
+
+            account = newUser;
+        } else {
+            if (req.body.role !== user.role) {
+                return res.status(400).json({
+                    status: 400,
+                    message: 'Sorry, no account was found.'
+                })
+            }
+
+            user.googleId = req.body.googleId;
+            await user.save();
+
+            account = user;
+        }
+
+        let payload = {id: account.id};
+        let token = jwt.sign(payload, CONFIG.app.jwtOptions.secretOrKey);
+
+        return res.status(200).json({
+            status: 200,
+            data: {
+                username: account.username,
+                role: account.role,
+                token: token,
+                googleId: account.googleId
+            }
+        })
+    } catch (err) {
+        console.error('An error occurred:', err);
         return res.status(500).json({
             status: 500,
             message: 'An error occurred while processing the request'
