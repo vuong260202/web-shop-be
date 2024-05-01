@@ -85,6 +85,13 @@ router.post('/update-transaction', isLoggedIn, isAdmin, async (req, res, next) =
 
             transaction.updatedAt = new Date();
 
+            await global.sequelizeModels.Notice.create({
+                content: transaction.status === 'DONE' ? `Đơn hàng của bạn đã được giao!` : `Đơn hàng của bạn đã bắt đầu vận chuyển`,
+                userId: transaction.userId,
+                transactionId: transaction.id,
+                title: "TRANSACTION"
+            })
+
             updatePromises.push(transaction.save());
         }
 

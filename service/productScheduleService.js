@@ -26,7 +26,6 @@ const updateJobSchedule = new cron.CronJob('* * * * *', async () => {
                 ]
             }
         );
-        console.log('productStatistics', productStatistics);
 
         productStatistics.forEach(product => {
             // handle rating
@@ -41,7 +40,6 @@ const updateJobSchedule = new cron.CronJob('* * * * *', async () => {
             product.transactionCount = product.transactions.length;
             product.totalCount = product.transactions.reduce((total, transaction) => total + transaction.count, 0) || 0;
 
-            console.log(product);
             updatePromises.push(product.save());
         })
 

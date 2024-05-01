@@ -25,6 +25,11 @@ module.exports = function (sequelize) {
                 defaultValue: '',
                 allowNull: false,
             },
+            googleId: {
+                field: 'GOOGLE_ID',
+                type: Sequelize.STRING(100),
+                allowNull: true,
+            },
             email: {
                 field: 'EMAIL',
                 type: Sequelize.STRING(100),

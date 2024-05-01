@@ -18,9 +18,9 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
     let newTransaction = await Transaction.create(
         {
             productId: req.body.productId,
-            buyerName: req.user?.fullname ?? req.body.name,
-            numberPhone: req.user?.numberPhone ?? req.body.numberPhone,
-            address: req.user?.address ?? req.body.address,
+            buyerName: req.body.name,
+            numberPhone: req.body.numberPhone,
+            address: req.body.address,
             count: req.body.count,
             totalAmount: req.body.total,
             size: req.body.size,
@@ -31,6 +31,19 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
     )
 
     await newTransaction.save();
+
+    let admin = await global.sequelizeModels.User.findOne({
+        where: {
+            role: 'admin'
+        }
+    })
+
+    await global.sequelizeModels.Notice.create({
+        content: `Người dùng ${req.user.fullname ?? req.user.username} đã tạo một đơn hàng!`,
+        userId: admin.id,
+        transactionId: newTransaction.id,
+        title: "TRANSACTION"
+    })
 
     console.log(newTransaction)
 
@@ -108,10 +121,45 @@ router.post('/filter-transactions', webUtils.isLoggedIn, async (req, res) => {
 
 router.post('/delete-transactions', webUtils.isLoggedIn, async (req, res) => {
     let Transaction = global.sequelizeModels.Transaction;
+    let Notice = global.sequelizeModels.Notice;
 
     console.log(req.body.transactionIds)
 
     try {
+        let transactions = await Transaction.findAll({
+            where: {
+                id: {
+                    [Op.in]: req.body.transactionIds
+                }
+            }
+        })
+
+        if (req.user.role === 'admin') {
+            for (let transaction of transactions) {
+                await Notice.create({
+                    content: `Đơn hàng của bạn đã bị từ chối!`,
+                    userId: transaction.userId,
+                    transactionId: transaction.id,
+                    title: "TRANSACTION"
+                })
+            }
+        } else {
+            let admin = await global.sequelizeModels.User.findOne({
+                where: {
+                    role: 'admin'
+                }
+            })
+
+            for (let transaction of transactions) {
+                await Notice.create({
+                    content: `Người dùng ${req.user.fullname ?? req.user.username} đã huỷ đơn hàng!`,
+                    userId: admin.id,
+                    transactionId: transaction.id,
+                    title: "TRANSACTION"
+                })
+            }
+        }
+
         await Transaction.destroy({
             where: {
                 id: {
