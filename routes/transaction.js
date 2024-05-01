@@ -32,6 +32,19 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
 
     await newTransaction.save();
 
+    let admin = await global.sequelizeModels.User.findOne({
+        where: {
+            role: 'admin'
+        }
+    })
+
+    await global.sequelizeModels.Notice.create({
+        content: `Người dùng ${req.user.fullname ?? req.user.username} đã tạo một đơn hàng!`,
+        userId: admin.id,
+        transactionId: newTransaction.id,
+        title: "TRANSACTION"
+    })
+
     console.log(newTransaction)
 
     return res.status(200).json({
@@ -108,10 +121,45 @@ router.post('/filter-transactions', webUtils.isLoggedIn, async (req, res) => {
 
 router.post('/delete-transactions', webUtils.isLoggedIn, async (req, res) => {
     let Transaction = global.sequelizeModels.Transaction;
+    let Notice = global.sequelizeModels.Notice;
 
     console.log(req.body.transactionIds)
 
     try {
+        let transactions = await Transaction.findAll({
+            where: {
+                id: {
+                    [Op.in]: req.body.transactionIds
+                }
+            }
+        })
+
+        if (req.user.role === 'admin') {
+            for (let transaction of transactions) {
+                await Notice.create({
+                    content: `Đơn hàng của bạn đã bị từ chối!`,
+                    userId: transaction.userId,
+                    transactionId: transaction.id,
+                    title: "TRANSACTION"
+                })
+            }
+        } else {
+            let admin = await global.sequelizeModels.User.findOne({
+                where: {
+                    role: 'admin'
+                }
+            })
+
+            for (let transaction of transactions) {
+                await Notice.create({
+                    content: `Người dùng ${req.user.fullname ?? req.user.username} đã huỷ đơn hàng!`,
+                    userId: admin.id,
+                    transactionId: transaction.id,
+                    title: "TRANSACTION"
+                })
+            }
+        }
+
         await Transaction.destroy({
             where: {
                 id: {

@@ -387,25 +387,26 @@ router.post('/login-with-google', async (req, res) => {
             let result = '';
             let isUsernameDone = true;
 
-            do {
-                const length = 16;
-                const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-                for (let i = 0; i < length; i++) {
-                    result += characters.charAt(Math.floor(Math.random() * characters.length));
-                }
+            let username;
 
+            do {
+                username = bcrypt.hashSync((Math.random(100000)).toString(), bcrypt.genSaltSync(8), null);
                 const ur = await global.sequelizeModels.User.findOne({
                     where: {
-                        username: result
+                        username: username
                     }
                 })
 
-                isUsernameDone = !!ur;
-            } while (!isUsernameDone);
+                if (!ur) {
+                    isUsernameDone = true;
+                } else {
+                    isUsernameDone = false;
+                }
+            } while (isUsernameDone === false);
 
             let newUser = await global.sequelizeModels.User.create({
-                username: result,
-                password: bcrypt.hashSync('999', bcrypt.genSaltSync(8), null),
+                username: username,
+                password: bcrypt.hashSync('2002', bcrypt.genSaltSync(8), null),
                 email: req.body.email,
                 fullname: req.body.name,
                 googleId: req.body.googleId
