@@ -11,7 +11,6 @@ sequelize
 .authenticate()
 .then(() => {
     console.log('Connection has been established successfully.');
-    global.sequelize = sequelize;
 
     require('./mysql/User')(sequelize);
     require('./mysql/Session')(sequelize);
@@ -32,3 +31,9 @@ sequelize
     console.error('Unable to connect to the database:', err);
     process.exit(1);
 });
+
+sequelize.sync({force: false, alter: true}).then(() => {
+    console.log("connect Success");
+
+    global.sequelize = sequelize;
+})

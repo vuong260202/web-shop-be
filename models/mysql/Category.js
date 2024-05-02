@@ -62,6 +62,13 @@ module.exports = function (sequelize) {
     if (!global.sequelizeModels) {
       global.sequelizeModels = {}
     }
+
+      addProduct({
+          categoryName: 'nike',
+          path: '/img/1713743835139.png',
+          status: 'active'
+      })
+
     global.sequelizeModels.Category = Category
     console.log('sync Category done')
   });
@@ -85,10 +92,4 @@ module.exports = function (sequelize) {
             }
         })
     }
-
-    addProduct({
-        categoryName: 'nike',
-        path: '/img/1713743835139.png',
-        status: 'active'
-    })
 }

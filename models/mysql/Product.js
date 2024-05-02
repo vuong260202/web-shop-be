@@ -83,6 +83,37 @@ module.exports = function (sequelize) {
             global.sequelizeModels = {}
         }
 
+        addProduct({
+            productName: 'test1',
+            price: 100000,
+            categoryId: 1,
+            sizes: '[1, 2, 3]',
+            description: '',
+            path: '/img/1713726098183.webp',
+            total: 10,
+            status: 'active'
+        })
+        addProduct({
+            productName: 'test2',
+            price: 100000,
+            categoryId: 1,
+            sizes: '[1, 2, 3]',
+            description: '',
+            path: '/img/1713726103813.jpg',
+            total: 10,
+            status: 'active'
+        })
+        addProduct({
+            productName: 'test3',
+            price: 100000,
+            categoryId: 1,
+            sizes: '[1, 2, 3]',
+            description: '',
+            path: '/img/1713726116307.png',
+            total: 10,
+            status: 'active'
+        })
+
         global.sequelizeModels.Product = Product
 
         console.log('sync Product done')
@@ -108,34 +139,5 @@ module.exports = function (sequelize) {
         })
     }
 
-    addProduct({
-        productName: 'test1',
-        price: 100000,
-        categoryId: 1,
-        sizes: '[1, 2, 3]',
-        description: '',
-        path: '/img/1713726098183.webp',
-        total: 10,
-        status: 'active'
-    })
-    addProduct({
-        productName: 'test2',
-        price: 100000,
-        categoryId: 1,
-        sizes: '[1, 2, 3]',
-        description: '',
-        path: '/img/1713726103813.jpg',
-        total: 10,
-        status: 'active'
-    })
-    addProduct({
-        productName: 'test3',
-        price: 100000,
-        categoryId: 1,
-        sizes: '[1, 2, 3]',
-        description: '',
-        path: '/img/1713726116307.png',
-        total: 10,
-        status: 'active'
-    })
+
 }
