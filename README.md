@@ -21,20 +21,19 @@ hoặc nếu bị xung đột trong lúc cài đặt các thư viện, chạy l�
 npm install --force
 ```
 
-chạy mở docker trước khi cd vào Backend
+Mở Docker Desktop
 
 # run
 ```
 cd Backend
 ```
 
-chạy docker-compose để sinh database.
-run docker
+mở cmd, chạy lệnh docker-compose để cài đặt và tạo database:
 ```
 docker-compose up --build
 ```
 
-sau khi docker run xong, chuyển sang tab cmd khác để chạy backend.
+mở tab cmd khác để chạy backend:
 ```
 npm start
 ```
