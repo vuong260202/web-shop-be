@@ -12,9 +12,13 @@ tạo file index.js trong thư mục config có nội dung giống với index.j
 cp config/index.js.example config/index.js
 ```
 
-tải các thư viện cần dùng của dự án
+tải các thư viện cần dùng của dự án:
 ```
 npm install
+```
+hoặc nếu bị xung đột trong lúc cài đặt các thư viện, chạy lệnh: 
+```
+npm install --force
 ```
 
 chạy mở docker trước khi cd vào Backend
