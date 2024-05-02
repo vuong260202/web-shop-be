@@ -98,24 +98,6 @@ module.exports = function (sequelize) {
         }
     );
 
-    User.sync({force: false, alter: true}).then(() => {
-        if (!global.sequelizeModels) {
-            global.sequelizeModels = {}
-        }
-        global.sequelizeModels.User = User
-        console.log('sync User done')
-
-    });
-
-
-    User.prototype.hashPassword = function (plainPassword) {
-        return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(8), null);
-    }
-
-    User.prototype.validPassword = function (plainPassword) {
-        return bcrypt.compareSync(plainPassword, this.password);
-    }
-
     const addUser = (user) => {
         User.findOne({
             where: {
@@ -136,23 +118,43 @@ module.exports = function (sequelize) {
         })
     }
 
-    addUser({
-        username: 'admin',
-        password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null),
-        role: 'admin',
-        fullname: "admin",
-        address: 'address',
-        numberPhone: '1234567890',
-        email: 'admin@gmail.com'
-    })
+    User.sync({force: false, alter: true}).then(() => {
+        if (!global.sequelizeModels) {
+            global.sequelizeModels = {}
+        }
 
-    addUser({
-        username: 'user',
-        password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null),
-        role: 'user',
-        fullname: "user",
-        address: 'address',
-        numberPhone: '1234567890',
-        email: 'user@gmail.com'
-    })
+        addUser({
+            username: 'admin',
+            password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null),
+            role: 'admin',
+            fullname: "admin",
+            address: 'address',
+            numberPhone: '1234567890',
+            email: 'admin@gmail.com'
+        })
+
+        addUser({
+            username: 'user',
+            password: bcrypt.hashSync('1', bcrypt.genSaltSync(8), null),
+            role: 'user',
+            fullname: "user",
+            address: 'address',
+            numberPhone: '1234567890',
+            email: 'user@gmail.com'
+        })
+
+        global.sequelizeModels.User = User
+        console.log('sync User done')
+
+    });
+
+
+    User.prototype.hashPassword = function (plainPassword) {
+        return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(8), null);
+    }
+
+    User.prototype.validPassword = function (plainPassword) {
+        return bcrypt.compareSync(plainPassword, this.password);
+    }
+
 }

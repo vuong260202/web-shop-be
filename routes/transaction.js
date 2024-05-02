@@ -66,10 +66,7 @@ router.post('/filter-transactions', webUtils.isLoggedIn, async (req, res) => {
         conditions.status = req.body.status;
     }
 
-    console.log(req.user?.role);
-
     if(req.user?.role === 'user') {
-        console.log(req.user?.id);
         conditions.userId = req.user?.id;
     }
 
@@ -111,7 +108,11 @@ router.post('/filter-transactions', webUtils.isLoggedIn, async (req, res) => {
         return data;
     })
 
-    console.log(data);
+    if (req.body.query) {
+        data = data.filter(transaction => {
+            return transaction.productName.includes(req.body.query) || transaction.buyerName.includes(req.body.query);
+        })
+    }
 
     return res.status(200).json({
         status: 200,

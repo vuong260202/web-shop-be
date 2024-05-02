@@ -70,7 +70,6 @@ module.exports = function (sequelize) {
             global.sequelizeModels = {}
         }
         global.sequelizeModels.Notice = Notice
-        console.log('sync Chat done')
-
+        console.log('sync Notice done')
     });
 }

@@ -74,6 +74,10 @@ router.post('/filter-product', async (req, res, next) => {
             product.updatedAt = formatDate(product.updatedAt);
         })
 
+        if (req.body.query) {
+            products = products.filter(product => product.productName.includes(req.body.query));
+        }
+
         return res.status(200).json({
             status: 200,
             data: {
@@ -91,7 +95,6 @@ router.post('/filter-product', async (req, res, next) => {
 
 router.post('/filter-statistic', async (req, res, next) => {
     console.log(req.body);
-    let {sort, filters, type, isAll} = req.body
 
     let total
 
@@ -183,6 +186,10 @@ router.post('/filter-statistic', async (req, res, next) => {
 
             return product;
         })
+
+        if (req.body.query) {
+            products = products.filter(product => product.dataValues.productName.includes(req.body.query))
+        }
 
         products.sort((a, b) => b.dataValues.totalAmount - a.dataValues.totalAmount);
 
@@ -328,7 +335,7 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
             ],
         })
 
-        // console.log(product)
+        console.log(product)
 
         if (!product) {
             console.log("Product not found!")
@@ -368,7 +375,7 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
             totalRate: product.productStatistic.totalRate,
             transactionCount: product.productStatistic.transactionCount,
             totalCount: product.productStatistic.totalCount,
-            feedback: product.productStatistic.feedback?.filter(feedback => feedback.productId === feedback.rates.productId).map(feedback => {
+            feedback: product.productStatistic.feedback?.map(feedback => {
                 return {
                     content: feedback.content,
                     rate: feedback.rate,

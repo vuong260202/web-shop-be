@@ -10,7 +10,7 @@ router.get('/', function (req, res) {
     })
 })
 
-router.get('/all', async (req, res) => {
+router.post('/filter', async (req, res) => {
 
     let Category = global.sequelizeModels.Category;
     let Product = global.sequelizeModels.Product;
@@ -34,6 +34,10 @@ router.get('/all', async (req, res) => {
             category.dataValues.productCount = category.dataValues.products.length;
             category.dataValues.updatedAt = webUtils.formatDate(category.dataValues.updatedAt);
             delete category.dataValues.products;
+        }
+
+        if (req.body.query) {
+            categories = categories.filter(category => category.dataValues.categoryName.includes(req.body.query))
         }
 
         console.log(categories);
@@ -148,8 +152,9 @@ router.post('/filter-statistic', async (req, res, next) => {
             return category;
         })
 
-
-        // products.sort((a, b) => b.dataValues.totalAmount - a.dataValues.totalAmount);
+        if (req.body.query) {
+            categories = categories.filter(category => category.dataValues.categoryName.includes(req.body.query))
+        }
 
         return res.status(200).json({
             status: 200,
