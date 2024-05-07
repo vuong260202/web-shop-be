@@ -310,28 +310,25 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
                     association: new BelongsTo(Product, ProductStatistic, {
                         as: 'productStatistic', foreignKey: 'id', targetKey: 'productId'
                     }),
+                },
+                {
+                    association: new HasMany(Product, Feedback, {
+                        as: 'feedback', targetKey: 'id', foreignKey: 'productId'
+                    }),
 
                     include: [
                         {
-                            association: new HasMany(Feedback, ProductStatistic, {
-                                as: 'feedback', targetKey: 'productId', foreignKey: 'productId'
+                            association: new BelongsTo(Feedback, User, {
+                                as: 'user', foreignKey: 'userId', targetKey: 'id'
                             }),
-
-                            include: [
-                                {
-                                    association: new BelongsTo(Feedback, User, {
-                                        as: 'user', foreignKey: 'userId', targetKey: 'id'
-                                    }),
-                                },
-                                {
-                                    association: new BelongsTo(Feedback, Rate, {
-                                        as: 'rates', foreignKey: 'userId', targetKey: 'userId'
-                                    }),
-                                }
-                            ]
+                        },
+                        {
+                            association: new BelongsTo(Feedback, Rate, {
+                                as: 'rates', foreignKey: 'userId', targetKey: 'userId'
+                            }),
                         }
                     ]
-                },
+                }
             ],
         })
 
@@ -346,7 +343,7 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
         }
 
 
-        //
+
         product = product.dataValues;
         product.category = product.category.dataValues.categoryName;
         product.sizes = JSON.parse(product.sizes);
@@ -375,7 +372,7 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
             totalRate: product.productStatistic.totalRate,
             transactionCount: product.productStatistic.transactionCount,
             totalCount: product.productStatistic.totalCount,
-            feedback: product.productStatistic.feedback?.map(feedback => {
+            feedback: product.feedback?.map(feedback => {
                 return {
                     content: feedback.content,
                     rate: feedback.rate,
@@ -386,6 +383,8 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
                 };
             })
         }
+
+        delete product.feedback;
 
         return res.status(200).json({
             status: 200,

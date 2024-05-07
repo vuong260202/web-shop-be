@@ -174,6 +174,7 @@ router.post('/update-profile', WebUtils.isLoggedIn, async (req, res) => {
             fullname: req.body.fullname,
             numberPhone: req.body.numberPhone,
             address: req.body.address,
+            email: req.body.email
         }, {
             where: {
                 id: req.user.id

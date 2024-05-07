@@ -39,7 +39,7 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
     })
 
     await global.sequelizeModels.Notice.create({
-        content: `Người dùng ${req.user.fullname ?? req.user.username} đã tạo một đơn hàng!`,
+        content: `Bạn có một đơn hàng mới!`,
         userId: admin.id,
         transactionId: newTransaction.id,
         title: "TRANSACTION"
@@ -96,13 +96,6 @@ router.post('/filter-transactions', webUtils.isLoggedIn, async (req, res) => {
     data = data.rows.map(dt => {
         let data = dt.dataValues;
         data.productName = data.product.productName;
-
-        if (data.user) {
-            data.buyerName = data.user?.fullname;
-            data.numberPhone = data.user?.numberPhone;
-            data.address = data.user?.address;
-        }
-
         data.createdAt = webUtils.formatDate(data.createdAt);
 
         return data;
@@ -137,6 +130,7 @@ router.post('/delete-transactions', webUtils.isLoggedIn, async (req, res) => {
 
         if (req.user.role === 'admin') {
             for (let transaction of transactions) {
+                if (!transaction.userId) continue;
                 await Notice.create({
                     content: `Đơn hàng của bạn đã bị từ chối!`,
                     userId: transaction.userId,

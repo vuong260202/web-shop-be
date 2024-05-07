@@ -137,7 +137,7 @@ router.post('/upload-product', isLoggedIn, isAdmin, upload.single('file'), async
 
         req.file.path = req.file.path.replace(/\\/g, '/');
 
-        let newProduct = await Product.create(
+        await Product.create(
             {
                 productName: req.body.productName,
                 sizes: `[${req.body.sizes}]`,
@@ -147,20 +147,13 @@ router.post('/upload-product', isLoggedIn, isAdmin, upload.single('file'), async
                 total: req.body.total,
                 path: req.file.path.slice(req.file.path.indexOf('/img/')),
             }
-        )
-
-        await newProduct.save();
-
-        let newProductStatistic = await ProductStatistic.create(
-            {
-                productId: newProduct.id,
-                transactionCount: 0,
-                totalCount: 0,
-                totalRate: 5.0,
-            }
-        )
-
-        await newProductStatistic.save();
+        ).then(newProduct => {
+            ProductStatistic.create(
+                {
+                    productId: newProduct.id,
+                }
+            )
+        })
 
     } catch (err) {
         console.log('error: ', err);

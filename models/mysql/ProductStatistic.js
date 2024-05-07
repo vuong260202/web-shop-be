@@ -8,7 +8,7 @@ module.exports = function (sequelize) {
             productId: {
                 field: 'PRODUCT_ID',
                 type: Sequelize.INTEGER,
-                allowNull: true,
+                allowNull: false,
             },
             transactionCount: {
                 field: 'TRANSACTION_COUNT',
@@ -51,7 +51,9 @@ module.exports = function (sequelize) {
         if (!global.sequelizeModels) {
             global.sequelizeModels = {}
         }
+
         global.sequelizeModels.ProductStatistic = ProductStatistic
         console.log('sync ProductStatistic done')
     });
+
 }
