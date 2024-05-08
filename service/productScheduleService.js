@@ -5,6 +5,7 @@ const updateJobSchedule = new cron.CronJob('* * * * *', async () => {
     let ProductStatistic = global.sequelizeModels.ProductStatistic;
     let Rate = global.sequelizeModels.Rate;
     let Transaction = global.sequelizeModels.Transaction;
+    let Product = global.sequelizeModels.Product;
 
     try {
         let updatePromises = [];
@@ -14,33 +15,44 @@ const updateJobSchedule = new cron.CronJob('* * * * *', async () => {
             {
                 include: [
                     {
-                        association: new HasMany(ProductStatistic, Rate, {
-                            as: 'rates', foreignKey: 'productId', targetKey: 'productId'
+                        association: new BelongsTo(ProductStatistic, Product, {
+                            as: 'product', foreignKey: 'productId', targetKey: 'id'
                         }),
+
+                        include: [
+                            {
+                                association: new HasMany(Product, Rate, {
+                                    as: 'rates', targetKey: 'id', foreignKey: 'productId'
+                                }),
+                            },
+                            {
+                                association: new HasMany(Product, Transaction, {
+                                    as: 'transactions', foreignKey: 'productId', targetKey: 'productId'
+                                }),
+                            }
+                        ]
                     },
-                    {
-                        association: new HasMany(ProductStatistic, Transaction, {
-                            as: 'transactions', foreignKey: 'productId', targetKey: 'productId'
-                        }),
-                    }
                 ]
             }
         );
 
-        productStatistics.forEach(product => {
+        console.log('productStatistics', productStatistics);
+
+        productStatistics.forEach(productStatistic => {
             // handle rating
-            product.rates = product.rates?.filter(rate => rate.rate > 0) ?? [];
+            productStatistic.product.rates = productStatistic.product.rates?.filter(rate => rate.rate > 0) ?? [];
 
-            let length = Math.max(product.rates.length, 1);
-            let sum = product.rates.reduce((total, rate) => total + rate.rate, 0) || 0;
+            let length = Math.max(productStatistic.product.rates.length, 1);
+            let sum = productStatistic.product.rates.reduce((total, rate) => total + rate.rate, 0) || 0;
 
-            product.totalRate = sum / length;
+            productStatistic.totalRate = sum / length;
 
-            product.transactions = product.transactions?.filter(transaction => transaction.status === 'DONE') ?? [];
-            product.transactionCount = product.transactions.length;
-            product.totalCount = product.transactions.reduce((total, transaction) => total + transaction.count, 0) || 0;
+            productStatistic.transactions = productStatistic.product.transactions?.filter(transaction => transaction.status === 'DONE') ?? [];
+            productStatistic.transactionCount = productStatistic.product.transactions.length;
+            productStatistic.totalCount = productStatistic.product.transactions.reduce((total, transaction) => total + transaction.count, 0) || 0;
 
-            updatePromises.push(product.save());
+            // console.log(product);
+            updatePromises.push(productStatistic.save());
         })
 
         await Promise.all(updatePromises);
