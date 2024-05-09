@@ -476,5 +476,36 @@ router.post('/on-job', async (req, res) => {
         }
 })
 
+router.get('/all-product-name/:query', async (req, res) => {
+    console.log(req.params.query);
+    let Product = global.sequelizeModels.Product;
+
+    try {
+        let productNames = await Product.findAll({
+            attributes: [['PRODUCT_NAME', 'productName']],
+            where: {
+                productName: {
+                    [Op.like]: `%${req.params.query}%`
+                }
+            }
+        })
+
+        console.log(productNames.length)
+
+        return res.status(200).json(
+            {
+                status: 200,
+                data: productNames
+            }
+        );
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            status: 500,
+            message: 'Server internal error.'
+        })
+    }
+})
+
 
 module.exports = router
