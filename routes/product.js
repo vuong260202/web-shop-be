@@ -35,7 +35,7 @@ router.post('/filter-product', async (req, res, next) => {
 
         let conditions = {
             where: filterConditions,
-            include:[
+            include: [
                 {
                     association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.Category, {
                         as: 'category', foreignKey: 'categoryId', targetKey: 'id'
@@ -65,7 +65,11 @@ router.post('/filter-product', async (req, res, next) => {
 
         if (type === 'hot') {
             products = products.sort((a, b) => {
-                if(a.dataValues.productStatistic === null) { return 1 } else if(b.dataValues.productStatistic === null) { return -1 }
+                if (a.dataValues.productStatistic === null) {
+                    return 1
+                } else if (b.dataValues.productStatistic === null) {
+                    return -1
+                }
                 return b.dataValues.productStatistic.dataValues.totalCount - a.dataValues.productStatistic.dataValues.totalCount
             })
         }
@@ -99,10 +103,9 @@ router.post('/filter-statistic', async (req, res, next) => {
     let total
 
     console.log(req.body);
-    console.log(new Date(req.body.year, ))
+    console.log(new Date(req.body.year,))
     try {
-        let filterConditions = {
-        }
+        let filterConditions = {}
 
         let products = await global.sequelizeModels.Product.findAndCountAll({
             where: {
@@ -110,7 +113,7 @@ router.post('/filter-statistic', async (req, res, next) => {
                     [Op.in]: ['active', 'hidden'],
                 }
             },
-            include:[
+            include: [
                 {
                     association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.Category, {
                         as: 'category', foreignKey: 'categoryId', targetKey: 'id'
@@ -215,7 +218,7 @@ router.post('/all-product', async (req, res, next) => {
             where: {
                 status: 'active'
             },
-            include:[
+            include: [
                 {
                     association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.Category, {
                         as: 'category', foreignKey: 'categoryId', targetKey: 'id'
@@ -300,7 +303,7 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
                 id: req.params.id,
                 status: 'active'
             },
-            include:[
+            include: [
                 {
                     association: new BelongsTo(Product, Category, {
                         as: 'category', foreignKey: 'categoryId', targetKey: 'id'
@@ -346,7 +349,6 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
                 message: "Product not found!"
             });
         }
-
 
 
         product = product.dataValues;
@@ -397,7 +399,7 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
             status: 200,
             data: product
         });
-    } catch(err) {
+    } catch (err) {
         console.log('error: ', err);
         return res.status(500).json({
             status: 500,
@@ -407,73 +409,73 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
 })
 
 router.post('/on-job', async (req, res) => {
-        let ProductStatistic = global.sequelizeModels.ProductStatistic;
-        let Rate = global.sequelizeModels.Rate;
-        let Transaction = global.sequelizeModels.Transaction;
-        let Product = global.sequelizeModels.Product;
+    let ProductStatistic = global.sequelizeModels.ProductStatistic;
+    let Rate = global.sequelizeModels.Rate;
+    let Transaction = global.sequelizeModels.Transaction;
+    let Product = global.sequelizeModels.Product;
 
-        try {
-            let updatePromises = [];
-            console.log("start job calculator rate!")
-            let startTime = new Date().getTime();
-            let productStatistics = await ProductStatistic.findAll(
-                {
-                    include: [
-                        {
-                            association: new BelongsTo(ProductStatistic, Product, {
-                                as: 'product', foreignKey: 'productId', targetKey: 'id'
-                            }),
+    try {
+        let updatePromises = [];
+        console.log("start job calculator rate!")
+        let startTime = new Date().getTime();
+        let productStatistics = await ProductStatistic.findAll(
+            {
+                include: [
+                    {
+                        association: new BelongsTo(ProductStatistic, Product, {
+                            as: 'product', foreignKey: 'productId', targetKey: 'id'
+                        }),
 
-                            include: [
-                                {
-                                    association: new HasMany(Product, Rate, {
-                                        as: 'rates', targetKey: 'id', foreignKey: 'productId'
-                                    }),
-                                },
-                                {
-                                    association: new HasMany(Product, Transaction, {
-                                        as: 'transactions', foreignKey: 'productId', targetKey: 'productId'
-                                    }),
-                                }
-                            ]
-                        },
-                    ]
-                }
-            );
+                        include: [
+                            {
+                                association: new HasMany(Product, Rate, {
+                                    as: 'rates', targetKey: 'id', foreignKey: 'productId'
+                                }),
+                            },
+                            {
+                                association: new HasMany(Product, Transaction, {
+                                    as: 'transactions', foreignKey: 'productId', targetKey: 'productId'
+                                }),
+                            }
+                        ]
+                    },
+                ]
+            }
+        );
 
-            console.log('productStatistics', productStatistics);
+        console.log('productStatistics', productStatistics);
 
-            productStatistics.forEach(productStatistic => {
-                // handle rating
-                productStatistic.product.rates = productStatistic.product.rates?.filter(rate => rate.rate > 0) ?? [];
+        productStatistics.forEach(productStatistic => {
+            // handle rating
+            productStatistic.product.rates = productStatistic.product.rates?.filter(rate => rate.rate > 0) ?? [];
 
-                let length = Math.max(productStatistic.product.rates.length, 1);
-                let sum = productStatistic.product.rates.reduce((total, rate) => total + rate.rate, 0) || 0;
+            let length = Math.max(productStatistic.product.rates.length, 1);
+            let sum = productStatistic.product.rates.reduce((total, rate) => total + rate.rate, 0) || 0;
 
-                productStatistic.totalRate = sum / length;
+            productStatistic.totalRate = sum / length;
 
-                productStatistic.transactions = productStatistic.product.transactions?.filter(transaction => transaction.status === 'DONE') ?? [];
-                productStatistic.transactionCount = productStatistic.product.transactions.length;
-                productStatistic.totalCount = productStatistic.product.transactions.reduce((total, transaction) => total + transaction.count, 0) || 0;
+            productStatistic.transactions = productStatistic.product.transactions?.filter(transaction => transaction.status === 'DONE') ?? [];
+            productStatistic.transactionCount = productStatistic.product.transactions.length;
+            productStatistic.totalCount = productStatistic.product.transactions.reduce((total, transaction) => total + transaction.count, 0) || 0;
 
-                // console.log(product);
-                updatePromises.push(productStatistic.save());
-            })
+            // console.log(product);
+            updatePromises.push(productStatistic.save());
+        })
 
-            await Promise.all(updatePromises);
+        await Promise.all(updatePromises);
 
-            console.log('end job calculator rate with: ' + (new Date().getTime() - startTime));
+        console.log('end job calculator rate with: ' + (new Date().getTime() - startTime));
 
-            return res.status(200).json(
-                {
-                    status: 200,
-                    data: productStatistics
-                }
-            );
+        return res.status(200).json(
+            {
+                status: 200,
+                data: productStatistics
+            }
+        );
 
-        } catch (error) {
-            console.error('Error updating jobs:', error);
-        }
+    } catch (error) {
+        console.error('Error updating jobs:', error);
+    }
 })
 
 router.get('/all-product-name/:query', async (req, res) => {
@@ -486,7 +488,8 @@ router.get('/all-product-name/:query', async (req, res) => {
             where: {
                 productName: {
                     [Op.like]: `%${req.params.query}%`
-                }
+                },
+                status: 'ACTIVE',
             }
         })
 

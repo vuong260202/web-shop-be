@@ -46,7 +46,7 @@ router.post('/update', WebUtils.isLoggedIn, async (req, res) => {
         console.log(req.user.id);
         await Notice.update({
             isRead: true,
-        },{
+        }, {
             where: {
                 userId: req.user.id
             }

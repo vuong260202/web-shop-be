@@ -47,7 +47,7 @@ const updateJobSchedule = new cron.CronJob('* * * * *', async () => {
 
             productStatistic.totalRate = sum / length;
 
-            productStatistic.transactions = productStatistic.product.transactions?.filter(transaction => transaction.status === 'DONE') ?? [];
+            productStatistic.product.transactions = productStatistic.product.transactions?.filter(transaction => transaction.status === 'DONE') ?? [];
             productStatistic.transactionCount = productStatistic.product.transactions.length;
             productStatistic.totalCount = productStatistic.product.transactions.reduce((total, transaction) => total + transaction.count, 0) || 0;
 
