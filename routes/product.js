@@ -482,7 +482,7 @@ router.get('/all-product-name/:query', async (req, res) => {
 
     try {
         let productNames = await Product.findAll({
-            attributes: [['PRODUCT_NAME', 'productName']],
+            attributes: [['ID', 'id'], ['PRODUCT_NAME', 'productName']],
             where: {
                 productName: {
                     [Op.like]: `%${req.params.query}%`
