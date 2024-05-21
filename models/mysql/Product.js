@@ -88,59 +88,53 @@ module.exports = function (sequelize) {
         console.log('sync Product done')
 
         setTimeout(() => {
-            addProduct({
-                productName: 'test1',
-                price: 100000,
-                categoryId: 1,
-                sizes: '[1, 2, 3]',
-                description: '',
-                path: '/img/1713726098183.webp',
-                total: 10,
-                status: 'active'
+            Product.findAll().then(products => {
+                if (!products || products.length === 0) {
+                    addProduct({
+                        productName: 'Duramo speed',
+                        price: 2500000,
+                        categoryId: 2,
+                        sizes: '[38, 39, 40, 41, 42]',
+                        description: '',
+                        path: '/img/adidas-175439.png',
+                        total: 10,
+                        status: 'active'
+                    })
+                    addProduct({
+                        productName: 'Supernova solution',
+                        price: 4000000,
+                        categoryId: 2,
+                        sizes: '[38, 39, 40, 41, 42]',
+                        description: '',
+                        path: '/img/adidas-175714.png',
+                        total: 10,
+                        status: 'active'
+                    })
+                    addProduct({
+                        productName: 'Adidas Samba Classic White',
+                        price: 99000,
+                        categoryId: 2,
+                        sizes: '[38, 39, 40, 41, 42]',
+                        description: '',
+                        path: '/img/adidas-180426.png',
+                        total: 10,
+                        status: 'active'
+                    })
+                }
             })
-            addProduct({
-                productName: 'test2',
-                price: 100000,
-                categoryId: 1,
-                sizes: '[1, 2, 3]',
-                description: '',
-                path: '/img/1713726103813.jpg',
-                total: 10,
-                status: 'active'
-            })
-            addProduct({
-                productName: 'test3',
-                price: 100000,
-                categoryId: 1,
-                sizes: '[1, 2, 3]',
-                description: '',
-                path: '/img/1713726116307.png',
-                total: 10,
-                status: 'active'
-            })
-        }, 1000);
+        }, 2000);
     });
 
     const addProduct = (product) => {
-        Product.findOne({
-            where: {
-                productName: product.productName
-            }
-        }).then((existingProduct) => {
-            if (existingProduct) {
-                console.log('product already exists<<<< ');
-            } else {
-                Product.create(product)
-                    .then(newProduct => {
-                        global.sequelizeModels.ProductStatistic.create({
-                            productId: newProduct.id,
-                        });
-                        console.log(`Add product ${product.productName} done!!`);
-                    })
-                    .catch(error => {
-                        console.error('Error creating user:', error);
-                    });
-            }
-        })
+        Product.create(product)
+            .then(newProduct => {
+                global.sequelizeModels.ProductStatistic.create({
+                    productId: newProduct.id,
+                });
+                console.log(`Add product ${product.productName} done!!`);
+            })
+            .catch(error => {
+                console.error('Error creating user:', error);
+            });
     }
 }

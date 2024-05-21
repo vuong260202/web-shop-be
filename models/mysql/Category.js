@@ -47,14 +47,6 @@ module.exports = function (sequelize) {
     {
       tableName: tableName,
       timestamps: false,
-      // instanceMethods: {
-      //   hashPassword: function (plainPassword) {
-      //     return bcrypt.hashSync(plainPassword, bcrypt.genSaltSync(8), null);
-      //   },
-      //   validPassword: function (plainPassword) {
-      //     return bcrypt.compareSync(plainPassword, this.password);
-      //   }
-      // }
     }
   );
 
@@ -63,33 +55,43 @@ module.exports = function (sequelize) {
       global.sequelizeModels = {}
     }
 
-      addProduct({
-          categoryName: 'nike',
-          path: '/img/1713743835139.png',
-          status: 'active'
-      })
+
+
+      setTimeout(() => {
+          Category.findAll().then(categoies => {
+              if (categoies.length === 0) {
+                  setTimeout(() => addCategory({
+                      categoryName: 'nike',
+                      path: '/img/1713743835139.png',
+                      status: 'active'
+                  }), 100);
+
+                  setTimeout(() => addCategory({
+                      categoryName: 'adidas',
+                      path: '/img/adidas-logo.jpg',
+                      status: 'active'
+                  }), 200);
+
+                  setTimeout(() => addCategory({
+                      categoryName: 'Puma',
+                      path: '/img/puma-logo.jpg',
+                      status: 'active'
+                  }), 300);
+              }
+          })
+      }, 1000)
 
     global.sequelizeModels.Category = Category
     console.log('sync Category done')
   });
 
-    const addProduct = (product) => {
-        Category.findOne({
-            where: {
-                categoryName: product.categoryName
-            }
-        }).then((existingUser) => {
-            if (existingUser) {
-                console.log('account already exists<<<< ');
-            } else {
-                Category.create(product)
-                    .then(newUser => {
-                        console.log(`Add product ${product.productName} done!!`);
-                    })
-                    .catch(error => {
-                        console.error('Error creating user:', error);
-                    });
-            }
-        })
+    const addCategory = (category) => {
+        Category.create(category)
+            .then(newCategory => {
+                console.log(`Add category ${newCategory.categoryName} done!!`);
+            })
+            .catch(error => {
+                console.error('Error creating user:', error);
+            });
     }
 }
