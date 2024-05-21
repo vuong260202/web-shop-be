@@ -388,7 +388,7 @@ router.get('/product-detail/:id', isLoggedIn1, async (req, res) => {
                     createdAt: formatDate(feedback.createdAt),
                     author: feedback.user?.fullname,
                     userId: feedback.userId,
-                    rate: feedback.rates.rate
+                    rate: feedback.rates?.rate ?? 0
                 };
             })
         }

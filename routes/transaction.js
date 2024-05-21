@@ -15,6 +15,17 @@ router.post('/add-transaction', webUtils.isLoggedIn1, async (req, res) => {
 
     console.log(req.body)
     let Transaction = global.sequelizeModels.Transaction;
+    let Product = global.sequelizeModels.Product;
+
+    let product = await Product.findOne({
+        where: {
+            id: req.body.productId
+        }
+    });
+
+    product.total -= req.body.count;
+    await product.save();
+
     let newTransaction = await Transaction.create(
         {
             productId: req.body.productId,
@@ -116,6 +127,7 @@ router.post('/filter-transactions', webUtils.isLoggedIn, async (req, res) => {
 router.post('/delete-transactions', webUtils.isLoggedIn, async (req, res) => {
     let Transaction = global.sequelizeModels.Transaction;
     let Notice = global.sequelizeModels.Notice;
+    let Product = global.sequelizeModels.Product;
 
     console.log(req.body.transactionIds)
 
@@ -127,6 +139,20 @@ router.post('/delete-transactions', webUtils.isLoggedIn, async (req, res) => {
                 }
             }
         })
+
+        let updatePromises = []
+        for (let transaction of transactions) {
+            let product = await Product.findOne({
+                where: {
+                    id: transaction.productId
+                }
+            })
+
+            product.total += transaction.count;
+            updatePromises.push(product.save());
+        }
+
+        await Promise.all(updatePromises);
 
         if (req.user.role === 'admin') {
             for (let transaction of transactions) {

@@ -304,4 +304,78 @@ router.post('/update-category', isLoggedIn, isAdmin, upload.single('file'), asyn
     }
 })
 
+router.post('/update-product-status', isLoggedIn, isAdmin, async (req, res) => {
+
+    try {
+        let product = await global.sequelizeModels.Product.findOne({
+            where: {
+                id: req.body.productId
+            }
+        });
+
+        product.status = req.body.status === true ? 'hidden' : 'active';
+        await product.save();
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Product status updated successfully.'
+        });
+    } catch (err) {
+        console.log('error: ', err);
+        return res.status(500).json({
+            status: 500,
+            message: 'Server internal error.'
+        })
+    }
+})
+
+router.post('/update-category-status', isLoggedIn, isAdmin, async (req, res) => {
+    let Product = global.sequelizeModels.Product;
+    let Category = global.sequelizeModels.Category;
+
+    try {
+        let category = await Category.findOne({
+            where: {
+                id: req.body.categoryId,
+                status: {
+                    [Op.in]: ['active', 'hidden']
+                }
+            },
+        });
+
+        let products = await Product.findAll({
+            where: {
+                categoryId: category.id,
+                status: {
+                    [Op.in]: ['active', 'hidden']
+                }
+            }
+        })
+
+        console.log(category);
+        let updatePromises = [];
+        category.status = req.body.status === true ? 'hidden' : 'active';
+        updatePromises.push(category.save());
+
+        for (let product of products) {
+            product.status = category.status;
+            updatePromises.push(product.save());
+        }
+
+        await Promise.all(updatePromises);
+
+        return res.status(200).json({
+            status: 200,
+            message: 'Category status updated successfully.',
+            data: category
+        });
+    } catch (err) {
+        console.log('error: ', err);
+        return res.status(500).json({
+            status: 500,
+            message: 'Server internal error.'
+        })
+    }
+})
+
 module.exports = router;

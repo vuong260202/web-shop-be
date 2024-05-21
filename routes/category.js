@@ -18,7 +18,9 @@ router.post('/filter', async (req, res) => {
     try {
         let categories = await Category.findAll({
             where: {
-                status: 'active',
+                status: req.body.isAll ? {
+                    [Op.in]: ['active', 'hidden']
+                } : 'active',
             },
             include: [
                 {

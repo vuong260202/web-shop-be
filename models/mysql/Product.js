@@ -131,9 +131,9 @@ module.exports = function (sequelize) {
                 console.log('product already exists<<<< ');
             } else {
                 Product.create(product)
-                    .then(newPorduct => {
+                    .then(newProduct => {
                         global.sequelizeModels.ProductStatistic.create({
-                            productId: newPorduct.id,
+                            productId: newProduct.id,
                         });
                         console.log(`Add product ${product.productName} done!!`);
                     })
