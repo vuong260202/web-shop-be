@@ -99,7 +99,8 @@ module.exports = function (sequelize) {
                         path: '/img/adidas-175439.png',
                         total: 10,
                         status: 'active'
-                    })
+                    });
+
                     addProduct({
                         productName: 'Supernova solution',
                         price: 4000000,
@@ -109,7 +110,8 @@ module.exports = function (sequelize) {
                         path: '/img/adidas-175714.png',
                         total: 10,
                         status: 'active'
-                    })
+                    });
+
                     addProduct({
                         productName: 'Adidas Samba Classic White',
                         price: 99000,
@@ -119,7 +121,42 @@ module.exports = function (sequelize) {
                         path: '/img/adidas-180426.png',
                         total: 10,
                         status: 'active'
-                    })
+                    });
+
+                    addProduct({
+                        productName: 'Jordan 1 Ice Blue',
+                        price: 999000,
+                        categoryId: 1,
+                        sizes: '[38, 39, 40, 41, 42]',
+                        description: '',
+                        path: '/img/nike-203153.png',
+                        total: 10,
+                        status: 'active'
+                    });
+
+                    addProduct({
+                        productName: 'Nike Air Force 1',
+                        price: 290000,
+                        categoryId: 1,
+                        sizes: '[38, 39, 40, 41, 42]',
+                        description: '',
+                        path: '/img/nike-203502.png',
+                        total: 10,
+                        status: 'active'
+                    });
+
+                    addProduct({
+                        productName: `Nike Blazer Mid '77 SE`,
+                        price: 1451399,
+                        categoryId: 1,
+                        sizes: '[38, 39, 40, 41, 42]',
+                        description: '',
+                        path: '/img/nike-204151.png',
+                        total: 10,
+                        status: 'active'
+                    });
+
+
                 }
             })
         }, 2000);

@@ -105,14 +105,20 @@ router.post('/filter-statistic', async (req, res, next) => {
     console.log(req.body);
     console.log(new Date(req.body.year,))
     try {
-        let filterConditions = {}
+        let filterConditions = {
+            status: {
+                [Op.in]: ['active', 'hidden'],
+            }
+        }
+
+        if (req.body.query) {
+            filterConditions.productName = {
+                [Op.like]: `%${req.body.query}%`
+            }
+        }
 
         let products = await global.sequelizeModels.Product.findAndCountAll({
-            where: {
-                status: {
-                    [Op.in]: ['active', 'hidden'],
-                }
-            },
+            where: filterConditions,
             include: [
                 {
                     association: new BelongsTo(global.sequelizeModels.Product, global.sequelizeModels.Category, {
@@ -190,9 +196,9 @@ router.post('/filter-statistic', async (req, res, next) => {
             return product;
         })
 
-        if (req.body.query) {
-            products = products.filter(product => product.dataValues.productName.includes(req.body.query))
-        }
+        // if (req.body.query) {
+        //     products = products.filter(product => product.dataValues.productName.includes(req.body.query))
+        // }
 
         products.sort((a, b) => b.dataValues.totalAmount - a.dataValues.totalAmount);
 
