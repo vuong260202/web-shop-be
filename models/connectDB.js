@@ -1,5 +1,7 @@
 const Sequelize = require('sequelize');
 let CONFIG = require('../config');
+const {readFileSync} = require("fs");
+const {join} = require("path");
 
 let sequelize = new Sequelize(CONFIG.db.dbname, CONFIG.db.user, CONFIG.db.password, {
     host: CONFIG.db.host,
@@ -36,4 +38,14 @@ sequelize.sync({force: false, alter: true}).then(() => {
     console.log("connect Success");
 
     global.sequelize = sequelize;
+
+    setTimeout(async () => {
+        global.sequelizeModels.User.findAll().then(async (users) => {
+            if (users.length === 0) {
+                const sqlFilePath = join(__dirname, '../resource/db/init.sql');
+                const sql = readFileSync(sqlFilePath, 'utf8');
+                await sequelize.query(sql);
+            }
+        })
+    }, 1000)
 })

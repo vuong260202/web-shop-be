@@ -55,41 +55,7 @@ module.exports = function (sequelize) {
             global.sequelizeModels = {}
         }
 
-        setTimeout(() => {
-            Category.findAll().then(categoies => {
-                if (categoies.length === 0) {
-                    setTimeout(() => addCategory({
-                        categoryName: 'nike',
-                        path: '/img/1713743835139.png',
-                        status: 'active'
-                    }), 100);
-
-                    setTimeout(() => addCategory({
-                        categoryName: 'adidas',
-                        path: '/img/adidas-logo.jpg',
-                        status: 'active'
-                    }), 200);
-
-                    setTimeout(() => addCategory({
-                        categoryName: 'Puma',
-                        path: '/img/puma-logo.jpg',
-                        status: 'active'
-                    }), 300);
-                }
-            })
-        }, 1000)
-
         global.sequelizeModels.Category = Category
         console.log('sync Category done')
     });
-
-    const addCategory = (category) => {
-        Category.create(category)
-            .then(newCategory => {
-                console.log(`Add category ${newCategory.categoryName} done!!`);
-            })
-            .catch(error => {
-                console.error('Error creating user:', error);
-            });
-    }
 }
