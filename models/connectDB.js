@@ -28,7 +28,17 @@ sequelize
 
     // Add other models as needed...
 
-})
+}).then(async () => {
+        setTimeout(async () => {
+            await global.sequelizeModels.User.findAll().then(async (users) => {
+                if (users.length === 0) {
+                    const sqlFilePath = join(__dirname, '../resource/db/init.sql');
+                    const sql = readFileSync(sqlFilePath, 'utf8');
+                    await sequelize.query(sql);
+                }
+            })
+        }, CONFIG.db.dbImportTimeout)
+    })
 .catch(err => {
     console.error('Unable to connect to the database:', err);
     process.exit(1);
@@ -38,14 +48,4 @@ sequelize.sync({force: false, alter: true}).then(() => {
     console.log("connect Success");
 
     global.sequelize = sequelize;
-
-    setTimeout(async () => {
-        global.sequelizeModels.User.findAll().then(async (users) => {
-            if (users.length === 0) {
-                const sqlFilePath = join(__dirname, '../resource/db/init.sql');
-                const sql = readFileSync(sqlFilePath, 'utf8');
-                await sequelize.query(sql);
-            }
-        })
-    }, 1000)
 })
